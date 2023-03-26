@@ -48,20 +48,25 @@ const hexagonVertices = [
 const floorVertices: Array<Vec2> = [
   new Vec2(-window.innerWidth / 2, -10),
   new Vec2(window.innerWidth / 2, -10),
-  new Vec2(window.innerWidth / 2, 10),
-  new Vec2(-window.innerWidth / 2, 10),
+  new Vec2(window.innerWidth / 2, 80),
+  new Vec2(-window.innerWidth / 2, 80),
 ]
 
+const createTriangle = () =>
+  new Polygon(new Vec2(120, 220), triangleVertices, Math.PI / 4)
+const createHexagon = () =>
+  new Polygon(new Vec2(150, 250), hexagonVertices, Math.PI / 6)
+
 const shapes: Array<Polygon> = [
-  new Polygon(new Vec2(120, 320), triangleVertices, Math.PI / 4),
-  new Polygon(new Vec2(150, 350), hexagonVertices, Math.PI / 6),
+  createTriangle(),
+  createHexagon(),
   new Polygon(
     new Vec2(window.innerWidth / 2, window.innerHeight - 20),
     floorVertices
   ),
 ]
-shapes[0].angularVelocity = 0.025
-shapes[1].angularVelocity = 0.025
+shapes[0].angularVelocity = 0.0125
+shapes[1].angularVelocity = 0.0125
 shapes[2].isStatic = true
 
 function update() {
@@ -70,8 +75,10 @@ function update() {
     shape.isColliding = false
     if (!shape.isStatic) {
       shape.rotateBy(shape.angularVelocity)
-      //shape.velocity.y += 0.03
-      //shape.position = shape.position.add(shape.velocity)
+      shape.velocity = shape.velocity
+        .add(new Vec2(0, 0.03))
+        .clamp(new Vec2(0, 10))
+      shape.position = shape.position.add(shape.velocity)
     }
   }
 
@@ -86,7 +93,7 @@ function update() {
       if (collision) {
         a.isColliding = true
         b.isColliding = true
-        //if (collision) SAT.resolveCollision(collision)
+        if (collision) SAT.resolveCollision(collision)
       }
     }
   }
@@ -107,12 +114,35 @@ function render() {
     ctx.closePath()
     ctx.stroke()
   }
+
+  ctx.fillStyle = "yellow"
+  ctx.fillText(shapes.length.toString(), 10, 10)
 }
+
+let isMouseDown = false
+let mousePos = new Vec2()
 
 function tick() {
+  if (isMouseDown) {
+    const shape = createHexagon()
+    shape.position = new Vec2(mousePos.x, mousePos.y)
+    shape.angularVelocity = 0.0125
+    shapes.push(shape)
+  }
   update()
   render()
-  requestAnimationFrame(tick)
+  // requestAnimationFrame(tick)
 }
 
-tick()
+setInterval(() => {
+  tick()
+}, 1000 / 120)
+
+canvas.addEventListener("mousedown", () => (isMouseDown = true))
+canvas.addEventListener("mouseup", () => (isMouseDown = false))
+
+canvas.addEventListener("mousemove", (e) => {
+  const x = e.clientX
+  const y = e.clientY
+  mousePos = new Vec2(x, y)
+})

@@ -9,6 +9,14 @@ export interface Collision {
 
 export type CollisionResult = Collision | null
 
+export class Projection {
+  constructor(public min: number, public max: number) {}
+
+  overlap(other: Projection): number {
+    return Math.min(this.max, other.max) - Math.max(this.min, other.min)
+  }
+}
+
 export class SAT {
   static checkCollision(a: Polygon, b: Polygon): CollisionResult {
     let mtv = new Vec2()

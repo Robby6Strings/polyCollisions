@@ -1,3 +1,4 @@
+import { Projection } from "./collisions"
 import { Vec2 } from "./vec"
 
 export class Polygon {
@@ -11,28 +12,42 @@ export class Polygon {
 
   constructor(position: Vec2, vertices: Vec2[], rotation?: number) {
     this.vertices = vertices
-    this.position = position ?? new Vec2()
+    this.position = position
     this.rotation = rotation ?? 0
+  }
+
+  project(normal: Vec2): Projection {
+    // Transform the normal into the polygon's local space
+    const localNormal = normal.subtract(this.position).rotate(-this.rotation)
+
+    let min = Number.MAX_VALUE
+    let max = Number.MIN_VALUE
+
+    const verts = this.getVertices()
+    for (let i = 0; i < verts.length; i++) {
+      // Transform the vertex into the polygon's local space
+      const localVertex = verts[i]
+
+      const projection = localVertex.dot(localNormal)
+      if (projection < min) {
+        min = projection
+      }
+      if (projection > max) {
+        max = projection
+      }
+    }
+    return new Projection(min, max)
   }
 
   public getEdges(): Vec2[] {
     const edges: Vec2[] = []
-    for (let i = 0; i < this.vertices.length; i++) {
-      const edge = this.vertices[(i + 1) % this.vertices.length].subtract(
-        this.vertices[i]
-      )
-      const rotatedEdge = this.rotate(edge, this.rotation)
-      edges.push(rotatedEdge)
+    const verts = this.getVertices()
+    for (let i = 0; i < verts.length; i++) {
+      const edge = verts[(i + 1) % verts.length].subtract(verts[i])
+      //const rotatedEdge = edge.rotate(this.rotation)
+      edges.push(edge)
     }
     return edges
-  }
-
-  public rotate(vector: Vec2, angle: number): Vec2 {
-    const sin = Math.sin(angle)
-    const cos = Math.cos(angle)
-    const x = vector.x * cos - vector.y * sin
-    const y = vector.x * sin + vector.y * cos
-    return new Vec2(x, y).add(this.position)
   }
 
   public getNormals(): Vec2[] {
@@ -54,7 +69,9 @@ export class Polygon {
   public getVertices(): Vec2[] {
     const transformedVertices: Vec2[] = []
     for (let i = 0; i < this.vertices.length; i++) {
-      const transformedVertex = this.rotate(this.vertices[i], this.rotation)
+      const transformedVertex = this.vertices[i]
+        .rotate(this.rotation)
+        .add(this.position)
       transformedVertices.push(transformedVertex)
     }
     return transformedVertices
