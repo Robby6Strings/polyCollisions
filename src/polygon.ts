@@ -9,11 +9,40 @@ export class Polygon {
   public isColliding: boolean = false
   public velocity: Vec2 = new Vec2()
   public angularVelocity: number = 0
+  private normals: Vec2[] = []
+  private _vertices: Vec2[] = []
+  minX: number = 0
+  maxX: number = 0
+  minY: number = 0
+  maxY: number = 0
+  needsUpdate: boolean = true
 
   constructor(position: Vec2, vertices: Vec2[], rotation?: number) {
     this.vertices = vertices
     this.position = position
     this.rotation = rotation ?? 0
+  }
+
+  render(ctx: CanvasRenderingContext2D): void {
+    const vertices = this.getVertices()
+    ctx.strokeStyle = this.isColliding ? "red" : "green"
+    ctx.beginPath()
+    ctx.moveTo(vertices[0].x, vertices[0].y)
+    for (const vertex of vertices) {
+      ctx.lineTo(vertex.x, vertex.y)
+    }
+    ctx.closePath()
+    ctx.stroke()
+  }
+  renderBounds(ctx: CanvasRenderingContext2D): void {
+    const { minX, minY, maxX, maxY } = this
+    ctx.beginPath()
+    ctx.moveTo(minX, minY)
+    ctx.lineTo(maxX, minY)
+    ctx.lineTo(maxX, maxY)
+    ctx.lineTo(minX, maxY)
+    ctx.closePath()
+    ctx.stroke()
   }
 
   project(normal: Vec2): Projection {
@@ -50,12 +79,17 @@ export class Polygon {
     return edges
   }
 
-  public getNormals(): Vec2[] {
-    const normals: Vec2[] = []
+  public updateNormals(): void {
+    this.normals = []
     for (const edge of this.getEdges()) {
-      normals.push(edge.normal())
+      this.normals.push(edge.normal())
     }
-    return normals
+    this.needsUpdate = false
+  }
+
+  public getNormals(): Vec2[] {
+    if (this.needsUpdate) this.updateNormals()
+    return this.normals
   }
 
   public translate(translation: Vec2): void {
@@ -66,14 +100,29 @@ export class Polygon {
     this.rotation += angle
   }
 
-  public getVertices(): Vec2[] {
-    const transformedVertices: Vec2[] = []
+  updateVertices(): void {
+    this._vertices = []
+    this.minX = Infinity
+    this.minY = Infinity
+    this.maxX = -Infinity
+    this.maxY = -Infinity
+
     for (let i = 0; i < this.vertices.length; i++) {
       const transformedVertex = this.vertices[i]
         .rotate(this.rotation)
         .add(this.position)
-      transformedVertices.push(transformedVertex)
+
+      if (transformedVertex.x < this.minX) this.minX = transformedVertex.x
+      if (transformedVertex.y < this.minY) this.minY = transformedVertex.y
+
+      if (transformedVertex.x > this.maxX) this.maxX = transformedVertex.x
+      if (transformedVertex.y > this.maxY) this.maxY = transformedVertex.y
+      this._vertices.push(transformedVertex)
     }
-    return transformedVertices
+  }
+
+  public getVertices(): Vec2[] {
+    if (this.needsUpdate) this.updateVertices()
+    return this._vertices
   }
 }

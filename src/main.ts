@@ -46,8 +46,8 @@ const hexagonVertices = [
 ]
 
 const floorVertices: Array<Vec2> = [
-  new Vec2(-window.innerWidth / 2, -10),
-  new Vec2(window.innerWidth / 2, -10),
+  new Vec2(-window.innerWidth / 2, -40),
+  new Vec2(window.innerWidth / 2, -40),
   new Vec2(window.innerWidth / 2, 80),
   new Vec2(-window.innerWidth / 2, 80),
 ]
@@ -76,9 +76,10 @@ function update() {
     if (!shape.isStatic) {
       shape.rotateBy(shape.angularVelocity)
       shape.velocity = shape.velocity
-        .add(new Vec2(0, 0.03))
-        .clamp(new Vec2(0, 10))
+        .add(new Vec2(0, 0.015))
+        .clamp(new Vec2(0, 5))
       shape.position = shape.position.add(shape.velocity)
+      shape.needsUpdate = true
     }
   }
 
@@ -104,15 +105,9 @@ function render() {
   ctx.clearRect(0, 0, canvas.width, canvas.height)
 
   for (let i = 0; i < shapes.length; i++) {
-    const vertices = shapes[i].getVertices()
-    ctx.strokeStyle = shapes[i].isColliding ? "red" : "green"
-    ctx.beginPath()
-    ctx.moveTo(vertices[0].x, vertices[0].y)
-    for (const vertex of vertices) {
-      ctx.lineTo(vertex.x, vertex.y)
-    }
-    ctx.closePath()
-    ctx.stroke()
+    const shape = shapes[i]
+    shape.render(ctx)
+    //shape.renderBounds(ctx)
   }
 
   ctx.fillStyle = "yellow"
@@ -131,12 +126,13 @@ function tick() {
   }
   update()
   render()
-  // requestAnimationFrame(tick)
+  requestAnimationFrame(tick)
 }
 
-setInterval(() => {
-  tick()
-}, 1000 / 120)
+tick()
+// setInterval(() => {
+//   tick()
+// }, 1000 / 120)
 
 canvas.addEventListener("mousedown", () => (isMouseDown = true))
 canvas.addEventListener("mouseup", () => (isMouseDown = false))

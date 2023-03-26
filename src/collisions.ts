@@ -19,6 +19,19 @@ export class Projection {
 
 export class SAT {
   static checkCollision(a: Polygon, b: Polygon): CollisionResult {
+    //return SAT.narrowPhaseCollision(a, b)
+    if (
+      a.minX <= b.maxX &&
+      a.maxX >= b.minX &&
+      a.minY <= b.maxY &&
+      a.maxY >= b.minY
+    ) {
+      return SAT.narrowPhaseCollision(a, b)
+    }
+    return null
+  }
+
+  static narrowPhaseCollision(a: Polygon, b: Polygon): CollisionResult {
     let mtv = new Vec2()
     let overlap = Number.MAX_VALUE
     const normals = a.getNormals().concat(b.getNormals())
@@ -71,11 +84,13 @@ export class SAT {
       a.position = a.position.add(
         dotProduct < 0 ? displacement1 : displacement2
       )
+      a.needsUpdate = true
     }
     if (!b.isStatic) {
       b.position = b.position.add(
         dotProduct < 0 ? displacement2 : displacement1
       )
+      b.needsUpdate = true
     }
   }
 }
