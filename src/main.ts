@@ -2,12 +2,13 @@ import { SAT } from "./collisions"
 import "./style.css"
 import { createPoly, Polygon } from "./polygon"
 import { Vec2 } from "./vec"
-
+let loopRef = 0
 let ts = performance.now()
 let shapes: Array<Polygon> = []
 const maxPolyVertices = 15
 const options = {
   renderBounds: false,
+  pauseOnBlur: false,
 }
 
 const inputs = {
@@ -29,31 +30,39 @@ function spawnRandomShape() {
   shapes.push(shape)
 }
 
+function createOptionToggler(optionKey: string, lblText: string): HTMLElement {
+  const checkbox = Object.assign(document.createElement("input"), {
+    id: optionKey,
+    type: "checkbox",
+    onchange: () => {
+      //@ts-ignore
+      options[optionKey] = checkbox.checked
+    },
+  })
+  const lbl = Object.assign(document.createElement("label"), {
+    innerText: lblText,
+  })
+  lbl.htmlFor = checkbox.id
+
+  const wrapperEl = Object.assign(document.createElement("div"), {
+    className: "option",
+  })
+  wrapperEl.append(checkbox, lbl)
+  return wrapperEl
+}
+
 function createUI() {
-  const optsBox = document.createElement("div")
-  optsBox.style.position = "absolute"
-  optsBox.style.right = "0"
-  optsBox.style.top = "0"
-  optsBox.style.padding = "6px"
-  optsBox.style.backgroundColor = "rgba(0,0,0,.3)"
+  const optsBox = Object.assign(document.createElement("div"), {
+    className: "options",
+  })
   document.body.appendChild(optsBox)
 
-  const boundsRenderingToggler = Object.assign(
-    document.createElement("input"),
-    {
-      id: "boundsRender",
-      type: "checkbox",
-      onchange: () => {
-        options.renderBounds = boundsRenderingToggler.checked
-      },
-    }
+  optsBox.appendChild(
+    createOptionToggler("renderBounds", "Render bounding boxes")
   )
-  optsBox.appendChild(boundsRenderingToggler)
-  const lbl = Object.assign(document.createElement("label"), {
-    innerText: "render bounding boxes",
-  })
-  lbl.htmlFor = boundsRenderingToggler.id
-  optsBox.appendChild(lbl)
+  optsBox.appendChild(
+    createOptionToggler("pauseOnBlur", "Pause while not in focus")
+  )
 }
 createUI()
 
@@ -174,10 +183,17 @@ function tick() {
   ts = performance.now()
   update()
   render(performance.now() - ts)
-  requestAnimationFrame(tick)
+  loopRef = requestAnimationFrame(tick)
 }
 
 tick()
+
+window.addEventListener("blur", () => {
+  if (options.pauseOnBlur) cancelAnimationFrame(loopRef)
+})
+window.addEventListener("focus", () => {
+  if (options.pauseOnBlur) tick()
+})
 // setInterval(() => {
 //   tick()
 // }, 1000 / 120)

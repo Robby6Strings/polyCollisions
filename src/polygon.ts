@@ -26,6 +26,8 @@ export class Polygon {
   render(ctx: CanvasRenderingContext2D): void {
     const vertices = this.getVertices()
     ctx.strokeStyle = this.isColliding ? "red" : "green"
+    ctx.lineWidth = 2
+    ctx.fillStyle = "#444"
     ctx.beginPath()
     ctx.moveTo(vertices[0].x, vertices[0].y)
     for (const vertex of vertices) {
@@ -33,6 +35,7 @@ export class Polygon {
     }
     ctx.closePath()
     ctx.stroke()
+    ctx.fill()
   }
   renderBounds(ctx: CanvasRenderingContext2D): void {
     const { minX, minY, maxX, maxY } = this
