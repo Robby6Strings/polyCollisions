@@ -1,70 +1,21 @@
 import { SAT } from "./collisions"
 import "./style.css"
-import { createPoly, Polygon } from "./polygon"
+import { createPolygon, Polygon } from "./polygon"
 import { Vec2 } from "./vec"
-let loopRef = 0
-let ts = performance.now()
-let shapes: Array<Polygon> = []
-const maxPolyVertices = 15
-const options = {
-  renderBounds: false,
-  pauseOnBlur: false,
-}
+import { options, renderOptionsUI } from "./options"
+import { inputs } from "./inputs"
 
-const inputs = {
-  m0: false,
-  m1: false,
-  mPos: new Vec2(),
-}
+renderOptionsUI()
+
+let loopRef = 0,
+  frameStartTime = 0,
+  shapes: Array<Polygon> = []
 
 const canvas = document.createElement("canvas")
 canvas.width = window.innerWidth
 canvas.height = window.innerHeight
 document.body.appendChild(canvas)
 const ctx = canvas.getContext("2d")
-
-function spawnRandomShape() {
-  const n = Math.floor(3 + Math.random() * (maxPolyVertices - 3))
-  const shape = createPoly(inputs.mPos.copy(), n)
-  shape.angularVelocity = 0.0125
-  shapes.push(shape)
-}
-
-function createOptionToggler(optionKey: string, lblText: string): HTMLElement {
-  const checkbox = Object.assign(document.createElement("input"), {
-    id: optionKey,
-    type: "checkbox",
-    onchange: () => {
-      //@ts-ignore
-      options[optionKey] = checkbox.checked
-    },
-  })
-  const lbl = Object.assign(document.createElement("label"), {
-    innerText: lblText,
-  })
-  lbl.htmlFor = checkbox.id
-
-  const wrapperEl = Object.assign(document.createElement("div"), {
-    className: "option",
-  })
-  wrapperEl.append(checkbox, lbl)
-  return wrapperEl
-}
-
-function createUI() {
-  const optsBox = Object.assign(document.createElement("div"), {
-    className: "options",
-  })
-  document.body.appendChild(optsBox)
-
-  optsBox.appendChild(
-    createOptionToggler("renderBounds", "Render bounding boxes")
-  )
-  optsBox.appendChild(
-    createOptionToggler("pauseOnBlur", "Pause while not in focus")
-  )
-}
-createUI()
 
 function createWalls() {
   const floorVertices: Array<Vec2> = [
@@ -179,10 +130,10 @@ function render(dt: number) {
 }
 
 function tick() {
-  if (inputs.m0) spawnRandomShape()
-  ts = performance.now()
+  if (inputs.m0) shapes.push(createPolygon())
+  frameStartTime = performance.now()
   update()
-  render(performance.now() - ts)
+  render(performance.now() - frameStartTime)
   loopRef = requestAnimationFrame(tick)
 }
 
@@ -194,9 +145,6 @@ window.addEventListener("blur", () => {
 window.addEventListener("focus", () => {
   if (options.pauseOnBlur) tick()
 })
-// setInterval(() => {
-//   tick()
-// }, 1000 / 120)
 
 function toggleMouseInput(btn: number, val: boolean) {
   inputs[btn == 0 ? "m0" : "m1"] = val

@@ -11,10 +11,12 @@ input {
   margin:0;
   vertical-align: middle;
   margin-right: .5rem;
+  color: #222;
+  max-width: 50px;
 }
 
 body {
-  background: #222;
+  background: #101018;
   margin: 0;
   overflow: hidden;
 }

@@ -1,4 +1,6 @@
 import { Projection } from "./collisions"
+import { inputs } from "./inputs"
+import { options } from "./options"
 import { Vec2 } from "./vec"
 
 export class Polygon {
@@ -26,8 +28,8 @@ export class Polygon {
   render(ctx: CanvasRenderingContext2D): void {
     const vertices = this.getVertices()
     ctx.strokeStyle = this.isColliding ? "red" : "green"
-    ctx.lineWidth = 2
-    ctx.fillStyle = "#444"
+    ctx.lineWidth = options.strokeWidth
+    ctx.fillStyle = "#555"
     ctx.beginPath()
     ctx.moveTo(vertices[0].x, vertices[0].y)
     for (const vertex of vertices) {
@@ -35,7 +37,8 @@ export class Polygon {
     }
     ctx.closePath()
     ctx.stroke()
-    ctx.fill()
+    if (options.renderShapeBackgrounds) ctx.fill()
+    ctx.lineWidth = 1
   }
   renderBounds(ctx: CanvasRenderingContext2D): void {
     const { minX, minY, maxX, maxY } = this
@@ -138,8 +141,16 @@ function genPolygonVerts(n: number): Vec2[] {
   }
   return verts
 }
-export const createPoly = (pos: Vec2, n: number) =>
-  new Polygon(
-    pos,
+
+export function createPolygon(): Polygon {
+  const n = options.randomizeNumVertices
+    ? Math.floor(3 + Math.random() * (options.maxPolyVertices - 3))
+    : options.maxPolyVertices
+
+  const shape = new Polygon(
+    inputs.mPos.copy(),
     genPolygonVerts(n).map((v) => v.scale(25))
   )
+  shape.angularVelocity = 0.0125
+  return shape
+}
