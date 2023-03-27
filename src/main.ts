@@ -3,6 +3,8 @@ import "./style.css"
 import { Polygon } from "./polygon"
 import { Vec2 } from "./vec"
 
+let ts = performance.now()
+
 const shapes: Array<Polygon> = []
 const inputs = {
   m0: false,
@@ -16,26 +18,19 @@ canvas.height = window.innerHeight
 document.body.appendChild(canvas)
 const ctx = canvas.getContext("2d")
 
-function genHexagonVerts(): Array<Vec2> {
+function genPolygonVerts(n: number): Vec2[] {
   const verts: Array<Vec2> = []
-  for (let i = 0; i < 6; i++) {
-    const angle = (Math.PI / 3) * i
+  for (let i = 1; i <= n; i++) {
+    const angle = i * ((2 * Math.PI) / n)
     verts.push(new Vec2(Math.cos(angle), Math.sin(angle)))
   }
   return verts
 }
-
-function genTriangleVerts(): Array<Vec2> {
-  const verts: Array<Vec2> = []
-  for (let i = 0; i < 3; i++) {
-    const angle = (Math.PI / 3) * i * 2
-    verts.push(new Vec2(Math.cos(angle), Math.sin(angle)))
-  }
-  return verts
-}
-
-const triangleVertices = [...genTriangleVerts().map((v) => v.scale(25))]
-const hexagonVertices = [...genHexagonVerts().map((v) => v.scale(25))]
+const createPoly = (pos: Vec2, n: number) =>
+  new Polygon(
+    pos,
+    genPolygonVerts(n).map((v) => v.scale(25))
+  )
 
 const floorVertices: Array<Vec2> = [
   new Vec2(-window.innerWidth / 2, -40),
@@ -44,17 +39,29 @@ const floorVertices: Array<Vec2> = [
   new Vec2(-window.innerWidth / 2, 80),
 ]
 
-const createTriangle = () =>
-  new Polygon(new Vec2(120, 220), triangleVertices, Math.PI / 4)
-const createHexagon = () =>
-  new Polygon(new Vec2(150, 250), hexagonVertices, Math.PI / 6)
-
 const floor = new Polygon(
   new Vec2(window.innerWidth / 2, window.innerHeight - 80),
   floorVertices
 )
 floor.isStatic = true
 shapes.push(floor)
+
+const wallVertices: Array<Vec2> = [
+  new Vec2(-40, -200),
+  new Vec2(40, -200),
+  new Vec2(40, 200),
+  new Vec2(-40, 200),
+]
+const wall = new Polygon(new Vec2(40, window.innerHeight - 320), wallVertices)
+wall.isStatic = true
+shapes.push(wall)
+
+const wall2 = new Polygon(
+  new Vec2(window.innerWidth - 40, window.innerHeight - 320),
+  wallVertices
+)
+wall2.isStatic = true
+shapes.push(wall2)
 
 function update() {
   for (let i = 0; i < shapes.length; i++) {
@@ -68,13 +75,13 @@ function update() {
           inputs.mPos.x - shape.position.x
         )
         const dist = shape.position.distance(inputs.mPos)
-        const gravForce = dist / 50
+        const gravForce = dist / 100
         shape.velocity.x += Math.cos(gravAngle) * gravForce
         shape.velocity.y += Math.sin(gravAngle) * gravForce
       }
 
-      shape.velocity = shape.velocity.multiply(0.95)
-      shape.velocity.y += 1
+      shape.velocity.y += 0.2
+      shape.velocity = shape.velocity.multiply(0.975)
       shape.position = shape.position.add(shape.velocity)
       shape.needsUpdate = true
     }
@@ -97,7 +104,7 @@ function update() {
   }
 }
 
-function render() {
+function render(dt: number) {
   if (!ctx) return
   ctx.clearRect(0, 0, canvas.width, canvas.height)
 
@@ -108,18 +115,21 @@ function render() {
   }
 
   ctx.fillStyle = "yellow"
-  ctx.fillText(shapes.length.toString(), 10, 10)
+  ctx.fillText(`${shapes.length} shapes`, 10, 10)
+  ctx.fillText(`${dt}ms`, 10, 20)
 }
 
 function tick() {
   if (inputs.m0) {
-    const shape = Math.random() > 0.5 ? createHexagon() : createTriangle()
-    shape.position = inputs.mPos.copy()
-    shape.angularVelocity = 0.0125
+    const n = Math.floor(3 + Math.random() * 6)
+    const shape = createPoly(inputs.mPos.copy(), n)
+    //shape.angularVelocity = 0.0125
     shapes.push(shape)
   }
+  ts = performance.now()
   update()
-  render()
+  const dt = performance.now() - ts
+  render(dt)
   requestAnimationFrame(tick)
 }
 

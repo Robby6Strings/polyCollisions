@@ -32,6 +32,7 @@ export class SAT {
   }
 
   static narrowPhaseCollision(a: Polygon, b: Polygon): CollisionResult {
+    if (a.isStatic && b.isStatic) return null
     let mtv = new Vec2()
     let overlap = Number.MAX_VALUE
     const normals = a.getNormals().concat(b.getNormals())
@@ -91,6 +92,48 @@ export class SAT {
       b.position = b.position.add(mod)
       b.velocity = b.velocity.add(mod.multiply(0.1))
       b.needsUpdate = true
+    }
+  }
+
+  static resolveCollisionIterative(collision: Collision) {
+    const { a, b, mtv } = collision
+    if (a.isStatic && b.isStatic) return
+
+    const direction = b.position.subtract(a.position).normal()
+    const dotProduct = mtv.dot(direction)
+
+    const halfMtv = mtv.multiply(0.5)
+
+    let d1 = dotProduct < 0 ? halfMtv.multiply(-1) : halfMtv
+    let d2 = d1.multiply(-1)
+
+    const maxIterations = 10
+    let iteration = 0
+
+    while (iteration < maxIterations && SAT.checkCollision(a, b)) {
+      d1 = d1.multiply(0.5)
+      d2 = d2.multiply(0.5)
+
+      if (dotProduct < 0) {
+        if (!a.isStatic) {
+          a.position = a.position.add(d1)
+          a.needsUpdate = true
+        }
+        if (!b.isStatic) {
+          b.position = b.position.add(d2)
+          b.needsUpdate = true
+        }
+      } else {
+        if (!a.isStatic) {
+          a.position = a.position.add(d2)
+          a.needsUpdate = true
+        }
+        if (!b.isStatic) {
+          b.position = b.position.add(d1)
+          b.needsUpdate = true
+        }
+      }
+      iteration++
     }
   }
 }

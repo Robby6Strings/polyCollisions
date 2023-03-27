@@ -10,7 +10,7 @@ export class Polygon {
   public velocity: Vec2 = new Vec2()
   public angularVelocity: number = 0
   private normals: Vec2[] = []
-  private _vertices: Vec2[] = []
+  private _transformedVertices: Vec2[] = []
   minX: number = 0
   maxX: number = 0
   minY: number = 0
@@ -101,7 +101,7 @@ export class Polygon {
   }
 
   updateVertices(): void {
-    this._vertices = []
+    this._transformedVertices = []
     this.minX = Infinity
     this.minY = Infinity
     this.maxX = -Infinity
@@ -117,12 +117,12 @@ export class Polygon {
 
       if (transformedVertex.x > this.maxX) this.maxX = transformedVertex.x
       if (transformedVertex.y > this.maxY) this.maxY = transformedVertex.y
-      this._vertices.push(transformedVertex)
+      this._transformedVertices.push(transformedVertex)
     }
   }
 
   public getVertices(): Vec2[] {
     if (this.needsUpdate) this.updateVertices()
-    return this._vertices
+    return this._transformedVertices
   }
 }
