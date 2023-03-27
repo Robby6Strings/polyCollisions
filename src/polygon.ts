@@ -126,3 +126,17 @@ export class Polygon {
     return this._transformedVertices
   }
 }
+
+function genPolygonVerts(n: number): Vec2[] {
+  const verts: Array<Vec2> = []
+  for (let i = 1; i <= n; i++) {
+    const angle = i * ((2 * Math.PI) / n)
+    verts.push(new Vec2(Math.cos(angle), Math.sin(angle)))
+  }
+  return verts
+}
+export const createPoly = (pos: Vec2, n: number) =>
+  new Polygon(
+    pos,
+    genPolygonVerts(n).map((v) => v.scale(25))
+  )
