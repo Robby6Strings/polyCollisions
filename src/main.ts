@@ -1,11 +1,11 @@
-import { SAT } from "./collisions"
 import "./style.css"
+import { SAT } from "./collisions"
 import { createPolygon, Polygon } from "./polygon"
 import { Vec2 } from "./vec"
-import { options, renderOptionsUI } from "./options"
+import { options, createOptionsUI } from "./options"
 import { inputs } from "./inputs"
 
-renderOptionsUI()
+document.body.appendChild(createOptionsUI())
 
 let loopRef = 0,
   frameStartTime = 0,
@@ -17,7 +17,8 @@ canvas.height = window.innerHeight
 document.body.appendChild(canvas)
 const ctx = canvas.getContext("2d")
 
-function createWalls() {
+//create walls
+{
   const floorVertices: Array<Vec2> = [
     new Vec2(-window.innerWidth / 2, -40),
     new Vec2(window.innerWidth / 2, -40),
@@ -49,16 +50,38 @@ function createWalls() {
   wall2.isStatic = true
   shapes.push(wall2)
 }
-createWalls()
+//event listeners
+{
+  window.addEventListener("blur", () => {
+    if (options.pauseOnBlur) cancelAnimationFrame(loopRef)
+  })
+  window.addEventListener("focus", () => {
+    if (options.pauseOnBlur) tick()
+  })
 
-function cullOutOfBoundsShapes() {
-  shapes = shapes.filter((s) => {
-    return (
-      s.position.x < window.innerWidth + 100 &&
-      s.position.x > -100 &&
-      s.position.y < window.innerHeight + 100 &&
-      s.position.y > -100
-    )
+  function toggleMouseInput(btn: number, val: boolean) {
+    inputs[btn == 0 ? "m0" : "m1"] = val
+  }
+
+  canvas.addEventListener("mousedown", (event) => {
+    toggleMouseInput(event.button, true)
+  })
+  canvas.addEventListener("mouseup", (event) => {
+    toggleMouseInput(event.button, false)
+  })
+  canvas.addEventListener("contextmenu", (event) => {
+    event.preventDefault()
+  })
+
+  window.addEventListener("resize", () => {
+    canvas.width = window.innerWidth
+    canvas.height = window.innerHeight
+  })
+
+  canvas.addEventListener("mousemove", (e) => {
+    const x = e.clientX
+    const y = e.clientY
+    inputs.mPos = new Vec2(x, y)
   })
 }
 
@@ -108,7 +131,15 @@ function handleCollisions() {
 }
 
 function update() {
-  cullOutOfBoundsShapes()
+  //cull offscreen shapes
+  shapes = shapes.filter((s) => {
+    return (
+      s.position.x < window.innerWidth + 100 &&
+      s.position.x > -100 &&
+      s.position.y < window.innerHeight + 100 &&
+      s.position.y > -100
+    )
+  })
   updatePhysics()
   handleCollisions()
 }
@@ -138,35 +169,3 @@ function tick() {
 }
 
 tick()
-
-window.addEventListener("blur", () => {
-  if (options.pauseOnBlur) cancelAnimationFrame(loopRef)
-})
-window.addEventListener("focus", () => {
-  if (options.pauseOnBlur) tick()
-})
-
-function toggleMouseInput(btn: number, val: boolean) {
-  inputs[btn == 0 ? "m0" : "m1"] = val
-}
-
-canvas.addEventListener("mousedown", (event) => {
-  toggleMouseInput(event.button, true)
-})
-canvas.addEventListener("mouseup", (event) => {
-  toggleMouseInput(event.button, false)
-})
-canvas.addEventListener("contextmenu", (event) => {
-  event.preventDefault()
-})
-
-window.addEventListener("resize", () => {
-  canvas.width = window.innerWidth
-  canvas.height = window.innerHeight
-})
-
-canvas.addEventListener("mousemove", (e) => {
-  const x = e.clientX
-  const y = e.clientY
-  inputs.mPos = new Vec2(x, y)
-})

@@ -12,7 +12,7 @@ input {
   vertical-align: middle;
   margin-right: .5rem;
   color: #222;
-  max-width: 50px;
+  max-width: 40px;
 }
 
 body {
@@ -31,6 +31,5 @@ body {
   gap: .5rem;
 
   padding: .5rem;
-  margin-bottom: .5rem;
   background-color: rgba(0,0,0,.3);
 }
