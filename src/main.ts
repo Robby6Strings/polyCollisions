@@ -3,9 +3,12 @@ import "./style.css"
 import { Polygon } from "./polygon"
 import { Vec2 } from "./vec"
 
-function setup() {}
-
-document.addEventListener("ready", setup)
+const shapes: Array<Polygon> = []
+const inputs = {
+  m0: false,
+  m1: false,
+  mPos: new Vec2(),
+}
 
 const canvas = document.createElement("canvas")
 canvas.width = window.innerWidth
@@ -25,25 +28,14 @@ function genHexagonVerts(): Array<Vec2> {
 function genTriangleVerts(): Array<Vec2> {
   const verts: Array<Vec2> = []
   for (let i = 0; i < 3; i++) {
-    const angle = (Math.PI / 3) * i
+    const angle = (Math.PI / 3) * i * 2
     verts.push(new Vec2(Math.cos(angle), Math.sin(angle)))
   }
   return verts
 }
 
-const triangleVertices = [
-  // new Vec2(-25, 0), new Vec2(0, -50), new Vec2(25, 0)
-  ...genTriangleVerts().map((v) => v.scale(25)),
-]
-const hexagonVertices = [
-  ...genHexagonVerts().map((v) => v.scale(25)),
-  // new Vec2(-50, -25),
-  // new Vec2(-25, -50),
-  // new Vec2(25, -50),
-  // new Vec2(50, -25),
-  // new Vec2(25, 25),
-  // new Vec2(-25, 25),
-]
+const triangleVertices = [...genTriangleVerts().map((v) => v.scale(25))]
+const hexagonVertices = [...genHexagonVerts().map((v) => v.scale(25))]
 
 const floorVertices: Array<Vec2> = [
   new Vec2(-window.innerWidth / 2, -40),
@@ -57,17 +49,12 @@ const createTriangle = () =>
 const createHexagon = () =>
   new Polygon(new Vec2(150, 250), hexagonVertices, Math.PI / 6)
 
-const shapes: Array<Polygon> = [
-  createTriangle(),
-  createHexagon(),
-  new Polygon(
-    new Vec2(window.innerWidth / 2, window.innerHeight - 20),
-    floorVertices
-  ),
-]
-shapes[0].angularVelocity = 0.0125
-shapes[1].angularVelocity = 0.0125
-shapes[2].isStatic = true
+const floor = new Polygon(
+  new Vec2(window.innerWidth / 2, window.innerHeight - 80),
+  floorVertices
+)
+floor.isStatic = true
+shapes.push(floor)
 
 function update() {
   for (let i = 0; i < shapes.length; i++) {
@@ -75,9 +62,19 @@ function update() {
     shape.isColliding = false
     if (!shape.isStatic) {
       shape.rotateBy(shape.angularVelocity)
-      shape.velocity = shape.velocity
-        .add(new Vec2(0, 0.015))
-        .clamp(new Vec2(0, 5))
+      if (inputs.m1) {
+        const gravAngle = Math.atan2(
+          inputs.mPos.y - shape.position.y,
+          inputs.mPos.x - shape.position.x
+        )
+        const dist = shape.position.distance(inputs.mPos)
+        const gravForce = dist / 50
+        shape.velocity.x += Math.cos(gravAngle) * gravForce
+        shape.velocity.y += Math.sin(gravAngle) * gravForce
+      }
+
+      shape.velocity = shape.velocity.multiply(0.95)
+      shape.velocity.y += 1
       shape.position = shape.position.add(shape.velocity)
       shape.needsUpdate = true
     }
@@ -114,13 +111,10 @@ function render() {
   ctx.fillText(shapes.length.toString(), 10, 10)
 }
 
-let isMouseDown = false
-let mousePos = new Vec2()
-
 function tick() {
-  if (isMouseDown) {
-    const shape = createHexagon()
-    shape.position = new Vec2(mousePos.x, mousePos.y)
+  if (inputs.m0) {
+    const shape = Math.random() > 0.5 ? createHexagon() : createTriangle()
+    shape.position = inputs.mPos.copy()
     shape.angularVelocity = 0.0125
     shapes.push(shape)
   }
@@ -134,11 +128,28 @@ tick()
 //   tick()
 // }, 1000 / 120)
 
-canvas.addEventListener("mousedown", () => (isMouseDown = true))
-canvas.addEventListener("mouseup", () => (isMouseDown = false))
+canvas.addEventListener("mousedown", (event) => {
+  toggleMouseInput(event.button, true)
+})
+canvas.addEventListener("mouseup", (event) => {
+  toggleMouseInput(event.button, false)
+})
+canvas.addEventListener("contextmenu", (event) => {
+  event.preventDefault()
+})
+
+window.addEventListener("resize", () => {
+  canvas.width = window.innerWidth
+  canvas.height = window.innerHeight
+  floor.position.y = window.innerHeight - 80
+})
+
+function toggleMouseInput(btn: number, val: boolean) {
+  inputs[btn == 0 ? "m0" : "m1"] = val
+}
 
 canvas.addEventListener("mousemove", (e) => {
   const x = e.clientX
   const y = e.clientY
-  mousePos = new Vec2(x, y)
+  inputs.mPos = new Vec2(x, y)
 })

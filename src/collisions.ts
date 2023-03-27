@@ -81,15 +81,15 @@ export class SAT {
     const displacement2 = displacement1.multiply(-1)
 
     if (!a.isStatic) {
-      a.position = a.position.add(
-        dotProduct < 0 ? displacement1 : displacement2
-      )
+      const mod = dotProduct < 0 ? displacement1 : displacement2
+      a.position = a.position.add(mod)
+      a.velocity = a.velocity.add(mod.multiply(0.1))
       a.needsUpdate = true
     }
     if (!b.isStatic) {
-      b.position = b.position.add(
-        dotProduct < 0 ? displacement2 : displacement1
-      )
+      const mod = dotProduct < 0 ? displacement2 : displacement1
+      b.position = b.position.add(mod)
+      b.velocity = b.velocity.add(mod.multiply(0.1))
       b.needsUpdate = true
     }
   }

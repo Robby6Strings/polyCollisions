@@ -11,6 +11,13 @@ export class Vec2 {
     this.y = y ?? 0
   }
 
+  distance(v: Vec2) {
+    let x = v.x - this.x
+    let y = v.y - this.y
+
+    return Math.sqrt(x * x + y * y)
+  }
+
   public normal(): Vec2 {
     const len = this.length()
     return new Vec2(this.x / len, this.y / len)
