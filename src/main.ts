@@ -4,8 +4,12 @@ import { createPoly, Polygon } from "./polygon"
 import { Vec2 } from "./vec"
 
 let ts = performance.now()
-
 let shapes: Array<Polygon> = []
+const maxPolyVertices = 15
+const options = {
+  renderBounds: false,
+}
+
 const inputs = {
   m0: false,
   m1: false,
@@ -18,36 +22,74 @@ canvas.height = window.innerHeight
 document.body.appendChild(canvas)
 const ctx = canvas.getContext("2d")
 
-const floorVertices: Array<Vec2> = [
-  new Vec2(-window.innerWidth / 2, -40),
-  new Vec2(window.innerWidth / 2, -40),
-  new Vec2(window.innerWidth / 2, 80),
-  new Vec2(-window.innerWidth / 2, 80),
-]
+function spawnRandomShape() {
+  const n = Math.floor(3 + Math.random() * (maxPolyVertices - 3))
+  const shape = createPoly(inputs.mPos.copy(), n)
+  shape.angularVelocity = 0.0125
+  shapes.push(shape)
+}
 
-const floor = new Polygon(
-  new Vec2(window.innerWidth / 2, window.innerHeight - 80),
-  floorVertices
-)
-floor.isStatic = true
-shapes.push(floor)
+function createUI() {
+  const optsBox = document.createElement("div")
+  optsBox.style.position = "absolute"
+  optsBox.style.right = "0"
+  optsBox.style.top = "0"
+  optsBox.style.padding = "6px"
+  optsBox.style.backgroundColor = "rgba(0,0,0,.3)"
+  document.body.appendChild(optsBox)
 
-const wallVertices: Array<Vec2> = [
-  new Vec2(-40, -200),
-  new Vec2(40, -200),
-  new Vec2(40, 200),
-  new Vec2(-40, 200),
-]
-const wall = new Polygon(new Vec2(40, window.innerHeight - 320), wallVertices)
-wall.isStatic = true
-shapes.push(wall)
+  const boundsRenderingToggler = Object.assign(
+    document.createElement("input"),
+    {
+      id: "boundsRender",
+      type: "checkbox",
+      onchange: () => {
+        options.renderBounds = boundsRenderingToggler.checked
+      },
+    }
+  )
+  optsBox.appendChild(boundsRenderingToggler)
+  const lbl = Object.assign(document.createElement("label"), {
+    innerText: "render bounding boxes",
+  })
+  lbl.htmlFor = boundsRenderingToggler.id
+  optsBox.appendChild(lbl)
+}
+createUI()
 
-const wall2 = new Polygon(
-  new Vec2(window.innerWidth - 40, window.innerHeight - 320),
-  wallVertices
-)
-wall2.isStatic = true
-shapes.push(wall2)
+function createWalls() {
+  const floorVertices: Array<Vec2> = [
+    new Vec2(-window.innerWidth / 2, -40),
+    new Vec2(window.innerWidth / 2, -40),
+    new Vec2(window.innerWidth / 2, 80),
+    new Vec2(-window.innerWidth / 2, 80),
+  ]
+
+  const floor = new Polygon(
+    new Vec2(window.innerWidth / 2, window.innerHeight - 80),
+    floorVertices
+  )
+  floor.isStatic = true
+  shapes.push(floor)
+
+  const wallVertices: Array<Vec2> = [
+    new Vec2(-40, -200),
+    new Vec2(40, -200),
+    new Vec2(40, 200),
+    new Vec2(-40, 200),
+  ]
+  const wall = new Polygon(new Vec2(40, window.innerHeight - 320), wallVertices)
+  wall.isStatic = true
+  shapes.push(wall)
+
+  const wall2 = new Polygon(
+    new Vec2(window.innerWidth - 40, window.innerHeight - 320),
+    wallVertices
+  )
+  wall2.isStatic = true
+  shapes.push(wall2)
+}
+createWalls()
 
 function cullOutOfBoundsShapes() {
   shapes = shapes.filter((s) => {
@@ -118,19 +160,13 @@ function render(dt: number) {
   for (let i = 0; i < shapes.length; i++) {
     const shape = shapes[i]
     shape.render(ctx)
-    //shape.renderBounds(ctx)
+    if (options.renderBounds && shape.vertices.length !== 4)
+      shape.renderBounds(ctx)
   }
 
   ctx.fillStyle = "yellow"
-  ctx.fillText(`${shapes.length} shapes`, 10, 10)
+  ctx.fillText(`${shapes.length} polygons`, 10, 10)
   ctx.fillText(`${dt}ms`, 10, 20)
-}
-
-function spawnRandomShape() {
-  const n = Math.floor(3 + Math.random() * 6)
-  const shape = createPoly(inputs.mPos.copy(), n)
-  //shape.angularVelocity = 0.0125
-  shapes.push(shape)
 }
 
 function tick() {
