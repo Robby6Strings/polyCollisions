@@ -56,7 +56,7 @@ const ctx = canvas.getContext("2d")
     if (options.pauseOnBlur) cancelAnimationFrame(loopRef)
   })
   window.addEventListener("focus", () => {
-    if (options.pauseOnBlur) tick()
+    if (options.pauseOnBlur) main()
   })
 
   function toggleMouseInput(btn: number, val: boolean) {
@@ -85,6 +85,28 @@ const ctx = canvas.getContext("2d")
   })
 }
 
+function main() {
+  if (inputs.m0) shapes.push(createPolygon())
+  frameStartTime = performance.now()
+  update()
+  render(performance.now() - frameStartTime)
+  loopRef = requestAnimationFrame(main)
+}
+main()
+
+function update() {
+  //cull offscreen shapes
+  shapes = shapes.filter((s) => {
+    return (
+      s.position.x < window.innerWidth + 100 &&
+      s.position.x > -100 &&
+      s.position.y < window.innerHeight + 100 &&
+      s.position.y > -100
+    )
+  })
+  updatePhysics()
+  handleCollisions()
+}
 function updatePhysics() {
   for (let i = 0; i < shapes.length; i++) {
     const shape = shapes[i]
@@ -111,7 +133,6 @@ function updatePhysics() {
     }
   }
 }
-
 function handleCollisions() {
   for (let i = 0; i < shapes.length; i++) {
     const a = shapes[i]
@@ -130,20 +151,6 @@ function handleCollisions() {
   }
 }
 
-function update() {
-  //cull offscreen shapes
-  shapes = shapes.filter((s) => {
-    return (
-      s.position.x < window.innerWidth + 100 &&
-      s.position.x > -100 &&
-      s.position.y < window.innerHeight + 100 &&
-      s.position.y > -100
-    )
-  })
-  updatePhysics()
-  handleCollisions()
-}
-
 function render(dt: number) {
   if (!ctx) return
   ctx.clearRect(0, 0, canvas.width, canvas.height)
@@ -159,13 +166,3 @@ function render(dt: number) {
   ctx.fillText(`${shapes.length} polygons`, 10, 10)
   ctx.fillText(`${dt}ms`, 10, 20)
 }
-
-function tick() {
-  if (inputs.m0) shapes.push(createPolygon())
-  frameStartTime = performance.now()
-  update()
-  render(performance.now() - frameStartTime)
-  loopRef = requestAnimationFrame(tick)
-}
-
-tick()
