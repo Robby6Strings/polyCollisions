@@ -19,12 +19,11 @@ export class Projection {
 
 export class SAT {
   static checkCollision(a: Polygon, b: Polygon): CollisionResult {
-    //return SAT.narrowPhaseCollision(a, b)
     if (
-      a.minX <= b.maxX &&
-      a.maxX >= b.minX &&
-      a.minY <= b.maxY &&
-      a.maxY >= b.minY
+      a.boundingBox.minX <= b.boundingBox.maxX &&
+      a.boundingBox.maxX >= b.boundingBox.minX &&
+      a.boundingBox.minY <= b.boundingBox.maxY &&
+      a.boundingBox.maxY >= b.boundingBox.minY
     ) {
       return SAT.narrowPhaseCollision(a, b)
     }
@@ -107,7 +106,7 @@ export class SAT {
     let d1 = dotProduct < 0 ? halfMtv.multiply(-1) : halfMtv
     let d2 = d1.multiply(-1)
 
-    const maxIterations = 10
+    const maxIterations = 100
     let iteration = 0
 
     while (iteration < maxIterations && SAT.checkCollision(a, b)) {
@@ -117,19 +116,23 @@ export class SAT {
       if (dotProduct < 0) {
         if (!a.isStatic) {
           a.position = a.position.add(d1)
+          a.velocity = b.velocity.add(d1.multiply(0.1))
           a.needsUpdate = true
         }
         if (!b.isStatic) {
           b.position = b.position.add(d2)
+          b.velocity = b.velocity.add(d2.multiply(0.1))
           b.needsUpdate = true
         }
       } else {
         if (!a.isStatic) {
           a.position = a.position.add(d2)
+          a.velocity = a.velocity.add(d2.multiply(0.1))
           a.needsUpdate = true
         }
         if (!b.isStatic) {
           b.position = b.position.add(d1)
+          b.velocity = a.velocity.add(d2.multiply(0.1))
           b.needsUpdate = true
         }
       }

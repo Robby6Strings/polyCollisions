@@ -2,6 +2,14 @@ import { Projection } from "./collisions"
 import { inputs } from "./inputs"
 import { options } from "./options"
 import { Vec2 } from "./vec"
+import { TypedRectangle as QuadTreeRect } from "./quadTree"
+
+export interface BoundingBox {
+  minX: number
+  minY: number
+  maxX: number
+  maxY: number
+}
 
 export class Polygon {
   public vertices: Vec2[]
@@ -13,10 +21,20 @@ export class Polygon {
   public angularVelocity: number = 0
   private normals: Vec2[] = []
   private _transformedVertices: Vec2[] = []
-  minX: number = 0
-  maxX: number = 0
-  minY: number = 0
-  maxY: number = 0
+  public quadTreeRect: QuadTreeRect<Polygon> = new QuadTreeRect(
+    0,
+    0,
+    0,
+    0,
+    this
+  )
+  public boundingBox: BoundingBox = {
+    minX: 0,
+    maxX: 0,
+    minY: 0,
+    maxY: 0,
+  }
+
   needsUpdate: boolean = true
 
   constructor(position: Vec2, vertices: Vec2[], rotation?: number) {
@@ -41,7 +59,7 @@ export class Polygon {
     ctx.lineWidth = 1
   }
   renderBounds(ctx: CanvasRenderingContext2D): void {
-    const { minX, minY, maxX, maxY } = this
+    const { minX, minY, maxX, maxY } = this.boundingBox
     ctx.beginPath()
     ctx.moveTo(minX, minY)
     ctx.lineTo(maxX, minY)
@@ -108,23 +126,32 @@ export class Polygon {
 
   updateVertices(): void {
     this._transformedVertices = []
-    this.minX = Infinity
-    this.minY = Infinity
-    this.maxX = -Infinity
-    this.maxY = -Infinity
+    this.boundingBox.minX = Infinity
+    this.boundingBox.minY = Infinity
+    this.boundingBox.maxX = -Infinity
+    this.boundingBox.maxY = -Infinity
 
     for (let i = 0; i < this.vertices.length; i++) {
       const transformedVertex = this.vertices[i]
         .rotate(this.rotation)
         .add(this.position)
 
-      if (transformedVertex.x < this.minX) this.minX = transformedVertex.x
-      if (transformedVertex.y < this.minY) this.minY = transformedVertex.y
+      //prettier-ignore
+      if (transformedVertex.x < this.boundingBox.minX) this.boundingBox.minX = transformedVertex.x
+      //prettier-ignore
+      if (transformedVertex.y < this.boundingBox.minY) this.boundingBox.minY = transformedVertex.y
+      //prettier-ignore
+      if (transformedVertex.x > this.boundingBox.maxX) this.boundingBox.maxX = transformedVertex.x
+      //prettier-ignore
+      if (transformedVertex.y > this.boundingBox.maxY) this.boundingBox.maxY = transformedVertex.y
 
-      if (transformedVertex.x > this.maxX) this.maxX = transformedVertex.x
-      if (transformedVertex.y > this.maxY) this.maxY = transformedVertex.y
       this._transformedVertices.push(transformedVertex)
     }
+
+    this.quadTreeRect.x = this.boundingBox.minX
+    this.quadTreeRect.y = this.boundingBox.minY
+    this.quadTreeRect.width = this.boundingBox.maxX - this.boundingBox.minX
+    this.quadTreeRect.height = this.boundingBox.maxY - this.boundingBox.minY
   }
 
   public getVertices(): Vec2[] {
@@ -149,8 +176,9 @@ export function createPolygon(): Polygon {
 
   const shape = new Polygon(
     inputs.mPos.copy(),
-    genPolygonVerts(n).map((v) => v.scale(25))
+    genPolygonVerts(n).map((v) => v.scale(options.shapeScale))
   )
+  shape.updateVertices()
   shape.angularVelocity = 0.0125
   return shape
 }

@@ -4,11 +4,11 @@ import { createPolygon, Polygon } from "./polygon"
 import { Vec2 } from "./vec"
 import { options, createOptionsUI } from "./options"
 import { inputs } from "./inputs"
+import { quadTree, TypedRectangle } from "./quadTree"
 
 document.body.appendChild(createOptionsUI())
 
 let loopRef = 0,
-  frameStartTime = 0,
   shapes: Array<Polygon> = []
 
 const canvas = document.createElement("canvas")
@@ -22,8 +22,8 @@ const ctx = canvas.getContext("2d")
   const floorVertices: Array<Vec2> = [
     new Vec2(-window.innerWidth / 2, -40),
     new Vec2(window.innerWidth / 2, -40),
-    new Vec2(window.innerWidth / 2, 80),
-    new Vec2(-window.innerWidth / 2, 80),
+    new Vec2(window.innerWidth / 2, 40),
+    new Vec2(-window.innerWidth / 2, 40),
   ]
 
   const floor = new Polygon(
@@ -86,12 +86,21 @@ const ctx = canvas.getContext("2d")
 }
 
 function main() {
-  if (inputs.m0) shapes.push(createPolygon())
-  frameStartTime = performance.now()
+  if (inputs.m0) {
+    const newPoly = createPolygon()
+    shapes.push(newPoly)
+  }
+  const frameStartTime = performance.now()
   update()
+  quadTree.clear()
+  let len = shapes.length
+  while (len--) {
+    quadTree.insert(shapes[len].quadTreeRect)
+  }
   render(performance.now() - frameStartTime)
   loopRef = requestAnimationFrame(main)
 }
+//setInterval(main, 1000 / 30)
 main()
 
 function update() {
@@ -105,14 +114,14 @@ function update() {
     )
   })
   updatePhysics()
-  handleCollisions()
+  handleCollisions_QuadTree()
 }
 function updatePhysics() {
   for (let i = 0; i < shapes.length; i++) {
     const shape = shapes[i]
     shape.isColliding = false
     if (!shape.isStatic) {
-      shape.rotateBy(shape.angularVelocity)
+      //shape.rotateBy(shape.angularVelocity)
 
       // r-click blackhole
       if (inputs.m1) {
@@ -150,9 +159,29 @@ function handleCollisions() {
     }
   }
 }
+function handleCollisions_QuadTree() {
+  for (let i = 0; i < shapes.length; i++) {
+    const a = shapes[i]
+    //if (a.isStatic) continue
+    const potentials: TypedRectangle<Polygon>[] = []
+    if (!quadTree.query(a.quadTreeRect, potentials)) continue
+
+    for (const { data: b } of potentials) {
+      if (b === a) continue
+
+      const collision = SAT.checkCollision(a, b)
+      if (collision) {
+        a.isColliding = true
+        b.isColliding = true
+        if (collision) SAT.resolveCollision(collision)
+      }
+    }
+  }
+}
 
 function render(dt: number) {
   if (!ctx) return
+  const renderStartTime = performance.now()
   ctx.clearRect(0, 0, canvas.width, canvas.height)
 
   for (let i = 0; i < shapes.length; i++) {
@@ -162,7 +191,22 @@ function render(dt: number) {
       shape.renderBounds(ctx)
   }
 
+  if (options.renderBounds) quadTree.render(ctx)
+
   ctx.fillStyle = "yellow"
-  ctx.fillText(`${shapes.length} polygons`, 10, 10)
-  ctx.fillText(`${dt}ms`, 10, 20)
+  ctx.fillText(
+    `${shapes.length} polygons`,
+    window.innerWidth - 80,
+    window.innerHeight - 45
+  )
+  ctx.fillText(
+    `update: ${dt}ms`,
+    window.innerWidth - 80,
+    window.innerHeight - 30
+  )
+  ctx.fillText(
+    `render: ${performance.now() - renderStartTime}ms`,
+    window.innerWidth - 80,
+    window.innerHeight - 15
+  )
 }

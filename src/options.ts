@@ -3,8 +3,9 @@ export const options = {
   pauseOnBlur: false,
   renderShapeBackgrounds: false,
   randomizeNumVertices: true,
-  maxPolyVertices: 15,
+  maxPolyVertices: 8,
   strokeWidth: 2,
+  shapeScale: 12.5,
 }
 
 function createOptionElement(optionKey: string, val: any): HTMLElement {
