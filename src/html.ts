@@ -8,6 +8,8 @@ import {
   loadPrefab,
   optionGroups,
   optionKey,
+  resetOptions,
+  reloadPrefab,
 } from "./state"
 
 let optsBox: HTMLElement | null
@@ -61,10 +63,15 @@ function createOptionElement(optionKey: optionKey): HTMLElement {
         })
       })
     )
+    if (optionKey in state) {
+      //@ts-ignore
+      ;(el as HTMLSelectElement).value = state[optionKey]
+    }
   } else {
+    const type = getInputType(val)
     el = Object.assign(document.createElement("input"), {
+      type,
       id: optionKey,
-      type: getInputType(val),
       [typeof val === "boolean" ? "checked" : "value"]: val,
       onchange: () => {
         Object.assign(state.options, {
@@ -75,6 +82,7 @@ function createOptionElement(optionKey: optionKey): HTMLElement {
         })
       },
     })
+    if (type === "number") el.setAttribute("step", "0.1")
   }
 
   const lbl = document.createElement("label")
@@ -126,8 +134,23 @@ export function setupOptionsUI(loopFn: { (): void }) {
     ),
     Object.assign(document.createElement("button"), {
       type: "button",
-      innerText: "Reset polygons",
+      innerText: "Reload Polygon Prefab",
+      onclick: () => {
+        reloadPrefab()
+      },
+    }),
+    Object.assign(document.createElement("button"), {
+      type: "button",
+      innerText: "Clear Polygons",
       onclick: () => updateShapes(() => []),
+    }),
+    Object.assign(document.createElement("button"), {
+      type: "button",
+      innerText: "Reset Options",
+      onclick: () => {
+        resetOptions()
+        setupOptionsUI(loopFn)
+      },
     }),
     Object.assign(document.createElement("button"), {
       type: "button",

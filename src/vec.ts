@@ -52,6 +52,10 @@ export class Vec2 implements IVec2 {
     return new Vec2(this.x * val, this.y * val)
   }
 
+  divide(val: number): Vec2 {
+    return new Vec2(this.x / val, this.y / val)
+  }
+
   public copy(): Vec2 {
     return new Vec2(this.x, this.y)
   }

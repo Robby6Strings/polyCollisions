@@ -23,6 +23,7 @@ h5 {
 }
 
 select {
+  padding: 2px 6px;
   background-color: #222;
   border: 0;
   color: #aaa;
@@ -40,6 +41,9 @@ input {
   background-color: rgba(255,255,255,.15);
   border: 0;
   accent-color: rgb(210, 107, 4);
+}
+input[type="number"], select {
+  border-radius: 2px;
 }
 button {
   padding: .35rem .5rem;

@@ -15,6 +15,7 @@ export interface IPolygon {
   vertices: IVec2[]
   position: IVec2
   rotation: number
+  velocity: IVec2
   isStatic: boolean
 }
 
@@ -189,18 +190,21 @@ export class Polygon implements IPolygon {
       vertices: this.vertices.map((v) => v.serialize()),
       position: this.position.serialize(),
       rotation: this.rotation,
+      velocity: this.velocity.serialize(),
       isStatic: this.isStatic,
     }
   }
 
   public static deserialize(data: IPolygon): Polygon {
-    const { vertices, position, rotation, isStatic } = data
-    return new Polygon(
+    const { vertices, position, rotation, velocity, isStatic } = data
+    const poly = new Polygon(
       Vec2.deserialize(position),
       vertices.map((v) => Vec2.deserialize(v)),
       rotation,
       isStatic
     )
+    poly.velocity = Vec2.deserialize(velocity)
+    return poly
   }
 
   // public static deserialize(str: string): Vec2 {
@@ -210,7 +214,7 @@ export class Polygon implements IPolygon {
   // }
 }
 
-function genPolygonVerts(n: number): Vec2[] {
+export function genPolygonVerts(n: number): Vec2[] {
   const verts: Array<Vec2> = []
   for (let i = 1; i <= n; i++) {
     const angle = i * ((2 * Math.PI) / n)

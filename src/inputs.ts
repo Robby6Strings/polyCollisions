@@ -1,4 +1,4 @@
-import { loadState, saveState } from "./state"
+import { loadState, reloadPrefab, saveState } from "./state"
 import { Vec2 } from "./vec"
 
 export const inputs = {
@@ -17,4 +17,5 @@ export const keyMap: Map<string, (loopFn: { (): void }) => void> = new Map([
       if (el) el.classList.toggle("expanded")
     },
   ],
+  ["r", () => reloadPrefab()],
 ])

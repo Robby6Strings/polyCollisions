@@ -21,12 +21,12 @@ export function strToPrefab(str: string): Prefab {
   }
 }
 
-export function getPolygons(prefab: Prefab): Polygon[] {
+export function getPrefabCreator(prefab: Prefab): { (): Polygon[] } {
   switch (prefab) {
     case Prefab.Default:
-      return createDefaultPrefab()
+      return createDefaultPrefab
     case Prefab.Test:
-      return createTestPrefab()
+      return createTestPrefab
   }
   //throw new Error("Failed to load prefab: " + prefab)
 }

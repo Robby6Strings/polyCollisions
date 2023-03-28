@@ -3,18 +3,29 @@ import { SAT } from "./collisions"
 import { createPolygon, Polygon } from "./polygon"
 import { keyMap, inputs } from "./inputs"
 import { quadTree, TypedRectangle } from "./quadTree"
-import { addShape, loadPrefab, state, updateShapes } from "./state"
+import { addShape, loadPrefab, loadState, state, updateShapes } from "./state"
 import { setupOptionsUI } from "./html"
-import { Prefab } from "./prefab"
-
+import { normalize } from "./math"
+import { Vec2 } from "./vec"
 const canvas = document.createElement("canvas")
 canvas.width = window.innerWidth
 canvas.height = window.innerHeight
 document.body.appendChild(canvas)
 const ctx = canvas.getContext("2d")
 
-loadPrefab(Prefab.Default)
-
+console.log("norm: (0, 0)", normalize(new Vec2(0, 0)))
+console.log(
+  "norm: (size, size)",
+  normalize(new Vec2(window.innerWidth, window.innerHeight))
+)
+console.log(
+  "norm: (size+512, size+512)",
+  normalize(
+    new Vec2(window.innerWidth, window.innerHeight).add(new Vec2(512, 512))
+  )
+)
+//loadPrefab(state.prefab)
+loadState(main)
 //event listeners
 {
   function toggleMouseInput(btn: number, val: boolean) {
@@ -32,7 +43,7 @@ loadPrefab(Prefab.Default)
   })
 
   window.addEventListener("keydown", (event) => {
-    keyMap.get(event.key)?.(main)
+    keyMap.get(event.key.toLowerCase())?.(main)
   })
   window.addEventListener("resize", () => {
     canvas.width = window.innerWidth
@@ -56,10 +67,12 @@ function main() {
   while (len--) {
     quadTree.insert(state.shapes[len].quadTreeRect)
   }
+  //const dt = Math.min(performance.now() - frameStartTime, 1000 / state.options.fps)
+  //console.log(dt)
   render(performance.now() - frameStartTime)
 }
 
-setupOptionsUI(main)
+//setupOptionsUI(main)
 
 function update() {
   //cull offscreen shapes
@@ -155,7 +168,7 @@ function render(dt: number) {
 
   if (state.options.renderQuadTree) quadTree.render(ctx)
 
-  ctx.fillStyle = "yellow"
+  ctx.fillStyle = "orange"
   ctx.fillText(
     `${state.shapes.length} polygons`,
     window.innerWidth - 80,
