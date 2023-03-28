@@ -4,8 +4,9 @@ import { createPolygon, Polygon } from "./polygon"
 import { Vec2 } from "./vec"
 import { inputs } from "./inputs"
 import { quadTree, TypedRectangle } from "./quadTree"
-import { addShape, state, updateShapes } from "./state"
-import { setupOptionsUI } from "./options"
+import { addShape, loadPrefab, state, updateShapes } from "./state"
+import { setupOptionsUI } from "./html"
+import { Prefab } from "./prefab"
 
 const canvas = document.createElement("canvas")
 canvas.width = window.innerWidth
@@ -13,39 +14,8 @@ canvas.height = window.innerHeight
 document.body.appendChild(canvas)
 const ctx = canvas.getContext("2d")
 
-//create walls
-{
-  const floorVertices: Array<Vec2> = [
-    new Vec2(-window.innerWidth / 2, -40),
-    new Vec2(window.innerWidth / 2, -40),
-    new Vec2(window.innerWidth / 2, 40),
-    new Vec2(-window.innerWidth / 2, 40),
-  ]
+loadPrefab(Prefab.Default)
 
-  const floor = new Polygon(
-    new Vec2(window.innerWidth / 2, window.innerHeight - 80),
-    floorVertices
-  )
-  floor.isStatic = true
-  state.shapes.push(floor)
-
-  const wallVertices: Array<Vec2> = [
-    new Vec2(-40, -200),
-    new Vec2(40, -200),
-    new Vec2(40, 200),
-    new Vec2(-40, 200),
-  ]
-  const wall = new Polygon(new Vec2(40, window.innerHeight - 320), wallVertices)
-  wall.isStatic = true
-  state.shapes.push(wall)
-
-  const wall2 = new Polygon(
-    new Vec2(window.innerWidth - 40, window.innerHeight - 320),
-    wallVertices
-  )
-  wall2.isStatic = true
-  state.shapes.push(wall2)
-}
 //event listeners
 {
   function toggleMouseInput(btn: number, val: boolean) {

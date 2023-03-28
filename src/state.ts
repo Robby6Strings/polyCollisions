@@ -1,5 +1,6 @@
-import { setupOptionsUI } from "./options"
+import { setupOptionsUI } from "./html"
 import { Polygon, IPolygon } from "./polygon"
+import { getPolygons, getPrefabs, Prefab } from "./prefab"
 export const state = {
   loopRef: -1,
   shapes: [] as Polygon[],
@@ -15,6 +16,7 @@ export const state = {
     strokeWidth: 1.5,
     polySize: 20,
     fps: 60,
+    prefab: getPrefabs(),
   },
 }
 
@@ -50,6 +52,11 @@ export const loadState = (loopFn: { (): void }) => {
     state.options = parsed.options
     setupOptionsUI(loopFn)
   }
+}
+
+export function loadPrefab(prefab: Prefab) {
+  updateShapes(() => [])
+  state.shapes = getPolygons(prefab)
 }
 
 //setupOptionsUI()

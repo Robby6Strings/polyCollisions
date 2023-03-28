@@ -11,13 +11,24 @@ hr {
   opacity: .15;
 }
 
+select {
+  background-color: #222;
+  border: 0;
+  color: #aaa;
+}
+label {
+  margin-right: .5rem;
+  color: rgb(196, 126, 56)
+}
 input {
-  padding: 0;
+  padding: 1px 4px;
   margin:0;
   vertical-align: middle;
-  margin-right: .5rem;
-  color: #222;
-  max-width: 40px;
+  color: #aaa;
+  max-width: 50px;
+  background-color: rgba(255,255,255,.15);
+  border: 0;
+  accent-color: rgb(210, 107, 4);
 }
 button {
   background-color: #222;
@@ -30,16 +41,42 @@ body {
   margin: 0;
   overflow: hidden;
 }
-
-.options {
+.options-wrapper {
   position: absolute;
   top: 0;
   right: 0;
+  display:flex;
+  transition: margin 0.3s ease;
+  margin-right: -200px
+}
+.options-wrapper.expanded {
+  margin-right: 0
+}
 
+.options {
   display: flex;
   flex-direction: column;
-  gap: .5rem;
+  gap: 1rem;
 
-  padding: .5rem;
-  background-color: rgba(0,0,0,.3);
+  width: 200px;
+
+  padding: 1rem;
+  background-color: rgba(0,0,0,.8);
+}
+.option {
+  display: flex;
+  justify-content: space-between;
+}
+
+.options-wrapper .handle button {
+  background-color: rgb(210, 107, 4);
+  width: 2rem;
+  height: 2rem;
+  cursor: pointer;
+  opacity: .4;
+  transition: opacity .3s;
+  font-size: 1.5rem;
+}
+.options-wrapper .handle button:hover {
+  opacity: 1;
 }

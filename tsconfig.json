@@ -15,7 +15,7 @@
     "noImplicitReturns": true,
     "skipLibCheck": true,
     "typeRoots": [
-      "./src"
+      "./src/**"
     ]
   },
   "include": ["src"]
