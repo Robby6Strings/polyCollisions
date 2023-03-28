@@ -6,6 +6,11 @@
   user-select: none;
 }
 
+hr {
+  width: 100%;
+  opacity: .15;
+}
+
 input {
   padding: 0;
   margin:0;
@@ -13,6 +18,11 @@ input {
   margin-right: .5rem;
   color: #222;
   max-width: 40px;
+}
+button {
+  background-color: #222;
+  color: #ddd;
+  border: 0;
 }
 
 body {

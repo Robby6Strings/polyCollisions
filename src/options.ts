@@ -1,13 +1,4 @@
-export const options = {
-  renderBounds: true,
-  pauseOnBlur: false,
-  renderShapeBackgrounds: false,
-  randomizeNumVertices: false,
-  gravity: true,
-  maxPolyVertices: 3,
-  strokeWidth: 1.5,
-  shapeScale: 20,
-}
+import { updateShapes, saveState, loadState, state, setLoopRef } from "./state"
 
 function createOptionElement(optionKey: string, val: any): HTMLElement {
   const el = Object.assign(document.createElement("input"), {
@@ -15,7 +6,7 @@ function createOptionElement(optionKey: string, val: any): HTMLElement {
     type: typeof val === "boolean" ? "checkbox" : "number",
     [typeof val === "boolean" ? "checked" : "value"]: val,
     onchange: () => {
-      Object.assign(options, {
+      Object.assign(state.options, {
         [optionKey]: typeof val === "boolean" ? el.checked : el.value,
       })
     },
@@ -32,14 +23,50 @@ function createOptionElement(optionKey: string, val: any): HTMLElement {
   return wrapperEl
 }
 
-export function createOptionsUI() {
-  const optsBox = Object.assign(document.createElement("div"), {
+let optsBox: HTMLElement | null
+
+const eventEls: HTMLElement[] = []
+
+export function setupOptionsUI(loopFn: { (): void }) {
+  if (optsBox) {
+    document.body.removeChild(optsBox)
+  }
+  optsBox = Object.assign(document.createElement("div"), {
     className: "options",
   })
   optsBox.append(
-    ...Object.entries(options).map(([key, val]) =>
+    ...Object.entries(state.options).map(([key, val]) =>
       createOptionElement(key, val)
-    )
+    ),
+    document.createElement("hr"),
+    Object.assign(document.createElement("button"), {
+      type: "button",
+      innerText: "Reset polygons",
+      onclick: () => updateShapes(() => []),
+    }),
+    Object.assign(document.createElement("button"), {
+      type: "button",
+      innerText: "Save State",
+      onclick: () => {
+        saveState()
+      },
+    }),
+    Object.assign(document.createElement("button"), {
+      type: "button",
+      innerText: "Load State",
+      onclick: () => {
+        loadState(loopFn)
+      },
+    })
   )
-  return optsBox
+  const fpsOption = optsBox.querySelector("#fps")!
+  fpsOption.addEventListener("change", () => {
+    clearInterval(state.loopRef)
+    setLoopRef(setInterval(loopFn, 1000 / state.options.fps))
+  })
+
+  clearInterval(state.loopRef)
+  setLoopRef(setInterval(loopFn, 1000 / state.options.fps))
+
+  document.body.appendChild(optsBox)
 }

@@ -2,7 +2,12 @@ const cos = Math.cos,
   sin = Math.sin,
   sqrt = Math.sqrt
 
-export class Vec2 {
+export interface IVec2 {
+  x: number
+  y: number
+}
+
+export class Vec2 implements IVec2 {
   public x: number
   public y: number
 
@@ -86,4 +91,21 @@ export class Vec2 {
     const rY = point.y + (x - point.x) * sin(angle) + (y - point.y) * cos(angle)
     return new Vec2(rX, rY)
   }
+
+  public serialize(): IVec2 {
+    return {
+      x: this.x,
+      y: this.y,
+    }
+  }
+
+  public static deserialize(data: IVec2): Vec2 {
+    const { x, y } = data
+    return new Vec2(x, y)
+  }
+  // public static deserialize(str: string): Vec2 {
+  //   const data: IVec2 = JSON.parse(str)
+  //   const { x, y } = data
+  //   return new Vec2(x, y)
+  // }
 }

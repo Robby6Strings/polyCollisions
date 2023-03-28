@@ -1,8 +1,8 @@
 import { Projection } from "./collisions"
 import { inputs } from "./inputs"
-import { options } from "./options"
-import { Vec2 } from "./vec"
+import { IVec2, Vec2 } from "./vec"
 import { TypedRectangle as QuadTreeRect } from "./quadTree"
+import { state } from "./state"
 
 export interface BoundingBox {
   minX: number
@@ -11,7 +11,14 @@ export interface BoundingBox {
   maxY: number
 }
 
-export class Polygon {
+export interface IPolygon {
+  vertices: IVec2[]
+  position: IVec2
+  rotation: number
+  isStatic: boolean
+}
+
+export class Polygon implements IPolygon {
   public vertices: Vec2[]
   public position: Vec2
   public rotation: number
@@ -37,17 +44,35 @@ export class Polygon {
 
   needsUpdate: boolean = true
 
-  constructor(position: Vec2, vertices: Vec2[], rotation?: number) {
+  constructor(
+    position: Vec2,
+    vertices: Vec2[],
+    rotation?: number,
+    isStatic?: boolean
+  ) {
     this.vertices = vertices
     this.position = position
     this.rotation = rotation ?? 0
+    this.isStatic = isStatic ?? false
   }
 
   render(ctx: CanvasRenderingContext2D): void {
     const vertices = this.getVertices()
-    ctx.strokeStyle = this.isColliding ? "red" : "green"
-    ctx.lineWidth = options.strokeWidth
+
+    if (state.options.renderPolyData) {
+      ctx.fillStyle = "#777"
+      ctx.fillText(
+        `(${this.position.x.toFixed(2)}, ${this.position.y.toFixed(2)})`,
+        this.boundingBox.minX,
+        this.boundingBox.minY - 5
+      )
+    }
+
     ctx.fillStyle = "#555"
+
+    ctx.strokeStyle = this.isColliding ? "red" : "green"
+    ctx.lineWidth = state.options.strokeWidth
+
     ctx.beginPath()
     ctx.moveTo(vertices[0].x, vertices[0].y)
     for (const vertex of vertices) {
@@ -55,7 +80,7 @@ export class Polygon {
     }
     ctx.closePath()
     ctx.stroke()
-    if (options.renderShapeBackgrounds) ctx.fill()
+    if (state.options.renderShapeBackgrounds) ctx.fill()
     ctx.lineWidth = 1
   }
   renderBounds(ctx: CanvasRenderingContext2D): void {
@@ -158,6 +183,31 @@ export class Polygon {
     if (this.needsUpdate) this.updateVertices()
     return this._transformedVertices
   }
+
+  public serialize(): IPolygon {
+    return {
+      vertices: this.vertices.map((v) => v.serialize()),
+      position: this.position.serialize(),
+      rotation: this.rotation,
+      isStatic: this.isStatic,
+    }
+  }
+
+  public static deserialize(data: IPolygon): Polygon {
+    const { vertices, position, rotation, isStatic } = data
+    return new Polygon(
+      Vec2.deserialize(position),
+      vertices.map((v) => Vec2.deserialize(v)),
+      rotation,
+      isStatic
+    )
+  }
+
+  // public static deserialize(str: string): Vec2 {
+  //   const data: IVec2 = JSON.parse(str)
+  //   const { x, y } = data
+  //   return new Vec2(x, y)
+  // }
 }
 
 function genPolygonVerts(n: number): Vec2[] {
@@ -170,13 +220,13 @@ function genPolygonVerts(n: number): Vec2[] {
 }
 
 export function createPolygon(): Polygon {
-  const n = options.randomizeNumVertices
-    ? Math.floor(3 + Math.random() * (options.maxPolyVertices - 3))
-    : options.maxPolyVertices
+  const n = state.options.randomizeNumVertices
+    ? Math.floor(3 + Math.random() * (state.options.maxPolyVertices - 3))
+    : state.options.maxPolyVertices
 
   const shape = new Polygon(
     inputs.mPos.copy(),
-    genPolygonVerts(n).map((v) => v.scale(options.shapeScale))
+    genPolygonVerts(n).map((v) => v.scale(state.options.polySize))
   )
   shape.updateVertices()
   //shape.angularVelocity = 0.0125

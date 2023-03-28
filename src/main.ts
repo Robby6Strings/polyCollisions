@@ -2,14 +2,10 @@ import "./style.css"
 import { SAT } from "./collisions"
 import { createPolygon, Polygon } from "./polygon"
 import { Vec2 } from "./vec"
-import { options, createOptionsUI } from "./options"
 import { inputs } from "./inputs"
 import { quadTree, TypedRectangle } from "./quadTree"
-
-document.body.appendChild(createOptionsUI())
-
-let loopRef = 0,
-  shapes: Array<Polygon> = []
+import { addShape, state, updateShapes } from "./state"
+import { setupOptionsUI } from "./options"
 
 const canvas = document.createElement("canvas")
 canvas.width = window.innerWidth
@@ -31,7 +27,7 @@ const ctx = canvas.getContext("2d")
     floorVertices
   )
   floor.isStatic = true
-  shapes.push(floor)
+  state.shapes.push(floor)
 
   const wallVertices: Array<Vec2> = [
     new Vec2(-40, -200),
@@ -41,24 +37,17 @@ const ctx = canvas.getContext("2d")
   ]
   const wall = new Polygon(new Vec2(40, window.innerHeight - 320), wallVertices)
   wall.isStatic = true
-  shapes.push(wall)
+  state.shapes.push(wall)
 
   const wall2 = new Polygon(
     new Vec2(window.innerWidth - 40, window.innerHeight - 320),
     wallVertices
   )
   wall2.isStatic = true
-  shapes.push(wall2)
+  state.shapes.push(wall2)
 }
 //event listeners
 {
-  window.addEventListener("blur", () => {
-    if (options.pauseOnBlur) cancelAnimationFrame(loopRef)
-  })
-  window.addEventListener("focus", () => {
-    if (options.pauseOnBlur) main()
-  })
-
   function toggleMouseInput(btn: number, val: boolean) {
     inputs[btn == 0 ? "m0" : "m1"] = val
   }
@@ -87,38 +76,39 @@ const ctx = canvas.getContext("2d")
 
 function main() {
   if (inputs.m0) {
-    const newPoly = createPolygon()
-    shapes.push(newPoly)
+    addShape(createPolygon())
   }
   const frameStartTime = performance.now()
   update()
   quadTree.clear()
-  let len = shapes.length
+  let len = state.shapes.length
   while (len--) {
-    quadTree.insert(shapes[len].quadTreeRect)
+    quadTree.insert(state.shapes[len].quadTreeRect)
   }
   render(performance.now() - frameStartTime)
-  loopRef = requestAnimationFrame(main)
 }
-//setInterval(main, 1000 / 30)
-main()
+
+setupOptionsUI(main)
 
 function update() {
   //cull offscreen shapes
-  shapes = shapes.filter((s) => {
-    return (
-      s.position.x < window.innerWidth + 100 &&
-      s.position.x > -100 &&
-      s.position.y < window.innerHeight + 100 &&
-      s.position.y > -100
-    )
+  updateShapes((items: Polygon[]) => {
+    return items.filter((s: Polygon) => {
+      return (
+        s.position.x < window.innerWidth + 100 &&
+        s.position.x > -100 &&
+        s.position.y < window.innerHeight + 100 &&
+        s.position.y > -100
+      )
+    })
   })
+
   updatePhysics()
   handleCollisions_QuadTree()
 }
 function updatePhysics() {
-  for (let i = 0; i < shapes.length; i++) {
-    const shape = shapes[i]
+  for (let i = 0; i < state.shapes.length; i++) {
+    const shape = state.shapes[i]
     shape.isColliding = false
     if (!shape.isStatic) {
       shape.rotateBy(shape.angularVelocity)
@@ -135,18 +125,19 @@ function updatePhysics() {
         shape.velocity.y += Math.sin(gravAngle) * gravForce
       }
 
-      if (options.gravity) shape.velocity.y += 0.75 // gravity
+      shape.velocity.y += state.options.gravity // gravity
       shape.velocity = shape.velocity.multiply(0.935) // friction
+      shape.angularVelocity = shape.angularVelocity * 0.4
       shape.position = shape.position.add(shape.velocity)
       shape.needsUpdate = true
     }
   }
 }
 function handleCollisions() {
-  for (let i = 0; i < shapes.length; i++) {
-    const a = shapes[i]
-    for (let j = 0; j < shapes.length; j++) {
-      const b = shapes[j]
+  for (let i = 0; i < state.shapes.length; i++) {
+    const a = state.shapes[i]
+    for (let j = 0; j < state.shapes.length; j++) {
+      const b = state.shapes[j]
 
       if (a == b) continue
 
@@ -160,8 +151,8 @@ function handleCollisions() {
   }
 }
 function handleCollisions_QuadTree() {
-  for (let i = 0; i < shapes.length; i++) {
-    const a = shapes[i]
+  for (let i = 0; i < state.shapes.length; i++) {
+    const a = state.shapes[i]
     //if (a.isStatic) continue
     const potentials: TypedRectangle<Polygon>[] = []
     if (!quadTree.query(a.quadTreeRect, potentials)) continue
@@ -184,18 +175,18 @@ function render(dt: number) {
   const renderStartTime = performance.now()
   ctx.clearRect(0, 0, canvas.width, canvas.height)
 
-  for (let i = 0; i < shapes.length; i++) {
-    const shape = shapes[i]
+  for (let i = 0; i < state.shapes.length; i++) {
+    const shape = state.shapes[i]
     shape.render(ctx)
-    if (options.renderBounds && shape.vertices.length !== 4)
+    if (state.options.renderPolyBounds && shape.vertices.length !== 4)
       shape.renderBounds(ctx)
   }
 
-  if (options.renderBounds) quadTree.render(ctx)
+  if (state.options.renderQuadTree) quadTree.render(ctx)
 
   ctx.fillStyle = "yellow"
   ctx.fillText(
-    `${shapes.length} polygons`,
+    `${state.shapes.length} polygons`,
     window.innerWidth - 80,
     window.innerHeight - 45
   )

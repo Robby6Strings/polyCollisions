@@ -76,8 +76,7 @@ export class SAT {
     const direction = b.position.subtract(a.position).normal()
     const dotProduct = mtv.dot(direction)
 
-    const _mtv =
-      a.isStatic || b.isStatic ? mtv.multiply(0.9) : mtv.multiply(0.45)
+    const _mtv = a.isStatic || b.isStatic ? mtv : mtv.multiply(0.5)
     const displacement1 = dotProduct < 0 ? _mtv.multiply(-1) : _mtv
     const displacement2 = displacement1.multiply(-1)
 
@@ -123,7 +122,7 @@ export class SAT {
       if (dotProduct < 0) {
         if (!a.isStatic) {
           a.position = a.position.add(d1)
-          a.velocity = b.velocity.add(d1.multiply(0.1))
+          a.velocity = b.velocity.subtract(d1.multiply(0.1))
           a.needsUpdate = true
         }
         if (!b.isStatic) {
