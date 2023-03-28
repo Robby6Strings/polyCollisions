@@ -4,7 +4,14 @@ import { createPolygon, Polygon } from "./polygon"
 import { Vec2 } from "./vec"
 import { inputs } from "./inputs"
 import { quadTree, TypedRectangle } from "./quadTree"
-import { addShape, loadPrefab, state, updateShapes } from "./state"
+import {
+  addShape,
+  loadPrefab,
+  loadState,
+  saveState,
+  state,
+  updateShapes,
+} from "./state"
 import { setupOptionsUI } from "./html"
 import { Prefab } from "./prefab"
 
@@ -30,6 +37,22 @@ loadPrefab(Prefab.Default)
   })
   canvas.addEventListener("contextmenu", (event) => {
     event.preventDefault()
+  })
+
+  window.addEventListener("keydown", (event) => {
+    const ctrlMap: Map<string, () => void> = new Map([
+      ["l", () => loadState(main)],
+      ["s", () => saveState()],
+      [
+        "Escape",
+        () => {
+          const el = document.querySelector(".options-wrapper")
+          if (el) el.classList.toggle("expanded")
+        },
+      ],
+    ])
+
+    ctrlMap.get(event.key)?.()
   })
 
   window.addEventListener("resize", () => {
