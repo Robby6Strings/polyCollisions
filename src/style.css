@@ -68,7 +68,7 @@ body {
   top: 0;
   right: 0;
   display:flex;
-  transition: margin 0.3s ease;
+  transition: margin 0.25s ease;
   margin-right: -240px
 }
 .options-wrapper.expanded {

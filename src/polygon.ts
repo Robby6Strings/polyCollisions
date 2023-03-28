@@ -81,7 +81,7 @@ export class Polygon implements IPolygon {
     }
     ctx.closePath()
     ctx.stroke()
-    if (state.options.renderShapeBackgrounds) ctx.fill()
+    if (state.options.renderPolyBackgrounds) ctx.fill()
     ctx.lineWidth = 1
   }
   renderBounds(ctx: CanvasRenderingContext2D): void {
@@ -228,11 +228,10 @@ export function createPolygon(): Polygon {
     ? Math.floor(3 + Math.random() * (state.options.maxPolyVertices - 3))
     : state.options.maxPolyVertices
 
-  const shape = new Polygon(
+  const poly = new Polygon(
     inputs.mPos.copy(),
     genPolygonVerts(n).map((v) => v.scale(state.options.polySize))
   )
-  shape.updateVertices()
-  //shape.angularVelocity = 0.0125
-  return shape
+  poly.updateVertices()
+  return poly
 }

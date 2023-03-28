@@ -1,6 +1,6 @@
 import { strToPrefab } from "./prefab"
 import {
-  updateShapes,
+  updatePolygons,
   saveState,
   loadState,
   state,
@@ -134,19 +134,19 @@ export function setupOptionsUI(loopFn: { (): void }) {
     ),
     Object.assign(document.createElement("button"), {
       type: "button",
-      innerText: "Reload Polygon Prefab",
+      innerText: "Reload Polygon Prefab [R]",
       onclick: () => {
         reloadPrefab()
       },
     }),
     Object.assign(document.createElement("button"), {
       type: "button",
-      innerText: "Clear Polygons",
-      onclick: () => updateShapes(() => []),
+      innerText: "Clear Polygons [C]",
+      onclick: () => updatePolygons(() => []),
     }),
     Object.assign(document.createElement("button"), {
       type: "button",
-      innerText: "Reset Options",
+      innerText: "Reset Options [O]",
       onclick: () => {
         resetOptions()
         setupOptionsUI(loopFn)
@@ -154,14 +154,14 @@ export function setupOptionsUI(loopFn: { (): void }) {
     }),
     Object.assign(document.createElement("button"), {
       type: "button",
-      innerText: "Save State",
+      innerText: "Save State [S]",
       onclick: () => {
         saveState()
       },
     }),
     Object.assign(document.createElement("button"), {
       type: "button",
-      innerText: "Load State",
+      innerText: "Load State [L]",
       onclick: () => {
         loadState(loopFn)
       },
@@ -188,7 +188,7 @@ export function setupOptionsUI(loopFn: { (): void }) {
   })
 
   registerEventHandler<HTMLSelectElement>("#prefab", (e: Event) => {
-    updateShapes(() => [])
+    updatePolygons(() => [])
     loadPrefab(strToPrefab((e.target as HTMLSelectElement).value))
   })
 

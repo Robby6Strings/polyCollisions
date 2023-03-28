@@ -3,8 +3,7 @@ import { SAT } from "./collisions"
 import { createPolygon, Polygon } from "./polygon"
 import { keyMap, inputs } from "./inputs"
 import { quadTree, TypedRectangle } from "./quadTree"
-import { addShape, loadPrefab, loadState, state, updateShapes } from "./state"
-import { setupOptionsUI } from "./html"
+import { addPolygon, loadState, state, updatePolygons } from "./state"
 import { normalize } from "./math"
 import { Vec2 } from "./vec"
 const canvas = document.createElement("canvas")
@@ -58,14 +57,14 @@ loadState(main)
 
 function main() {
   if (inputs.m0) {
-    addShape(createPolygon())
+    addPolygon(createPolygon())
   }
   const frameStartTime = performance.now()
   update()
   quadTree.clear()
-  let len = state.shapes.length
+  let len = state.polygons.length
   while (len--) {
-    quadTree.insert(state.shapes[len].quadTreeRect)
+    quadTree.insert(state.polygons[len].quadTreeRect)
   }
   //const dt = Math.min(performance.now() - frameStartTime, 1000 / state.options.fps)
   //console.log(dt)
@@ -75,8 +74,8 @@ function main() {
 //setupOptionsUI(main)
 
 function update() {
-  //cull offscreen shapes
-  updateShapes((items: Polygon[]) => {
+  //cull offscreen polygons
+  updatePolygons((items: Polygon[]) => {
     return items.filter((s: Polygon) => {
       return (
         s.position.x < window.innerWidth + 100 &&
@@ -91,37 +90,37 @@ function update() {
   handleCollisions_QuadTree()
 }
 function updatePhysics() {
-  for (let i = 0; i < state.shapes.length; i++) {
-    const shape = state.shapes[i]
-    shape.isColliding = false
-    if (!shape.isStatic) {
-      shape.rotateBy(shape.angularVelocity)
+  for (let i = 0; i < state.polygons.length; i++) {
+    const poly = state.polygons[i]
+    poly.isColliding = false
+    if (!poly.isStatic) {
+      poly.rotateBy(poly.angularVelocity)
 
       // r-click blackhole
       if (inputs.m1) {
         const gravAngle = Math.atan2(
-          inputs.mPos.y - shape.position.y,
-          inputs.mPos.x - shape.position.x
+          inputs.mPos.y - poly.position.y,
+          inputs.mPos.x - poly.position.x
         )
-        const dist = shape.position.distance(inputs.mPos)
+        const dist = poly.position.distance(inputs.mPos)
         const gravForce = dist / 100
-        shape.velocity.x += Math.cos(gravAngle) * gravForce
-        shape.velocity.y += Math.sin(gravAngle) * gravForce
+        poly.velocity.x += Math.cos(gravAngle) * gravForce
+        poly.velocity.y += Math.sin(gravAngle) * gravForce
       }
 
-      shape.velocity.y += state.options.gravity // gravity
-      shape.velocity = shape.velocity.multiply(0.935) // friction
-      shape.angularVelocity = shape.angularVelocity * 0.4
-      shape.position = shape.position.add(shape.velocity)
-      shape.needsUpdate = true
+      poly.velocity.y += state.options.gravity // gravity
+      poly.velocity = poly.velocity.multiply(0.935) // friction
+      poly.angularVelocity = poly.angularVelocity * 0.4
+      poly.position = poly.position.add(poly.velocity)
+      poly.needsUpdate = true
     }
   }
 }
 // function handleCollisions() {
-//   for (let i = 0; i < state.shapes.length; i++) {
-//     const a = state.shapes[i]
-//     for (let j = 0; j < state.shapes.length; j++) {
-//       const b = state.shapes[j]
+//   for (let i = 0; i < state.polygons.length; i++) {
+//     const a = state.polygons[i]
+//     for (let j = 0; j < state.polygons.length; j++) {
+//       const b = state.polygons[j]
 
 //       if (a == b) continue
 
@@ -135,8 +134,8 @@ function updatePhysics() {
 //   }
 // }
 function handleCollisions_QuadTree() {
-  for (let i = 0; i < state.shapes.length; i++) {
-    const a = state.shapes[i]
+  for (let i = 0; i < state.polygons.length; i++) {
+    const a = state.polygons[i]
     //if (a.isStatic) continue
     const potentials: TypedRectangle<Polygon>[] = []
     if (!quadTree.query(a.quadTreeRect, potentials)) continue
@@ -159,18 +158,18 @@ function render(dt: number) {
   const renderStartTime = performance.now()
   ctx.clearRect(0, 0, canvas.width, canvas.height)
 
-  for (let i = 0; i < state.shapes.length; i++) {
-    const shape = state.shapes[i]
-    shape.render(ctx)
-    if (state.options.renderPolyBounds && shape.vertices.length !== 4)
-      shape.renderBounds(ctx)
+  for (let i = 0; i < state.polygons.length; i++) {
+    const poly = state.polygons[i]
+    poly.render(ctx)
+    if (state.options.renderPolyBounds && poly.vertices.length !== 4)
+      poly.renderBounds(ctx)
   }
 
   if (state.options.renderQuadTree) quadTree.render(ctx)
 
   ctx.fillStyle = "orange"
   ctx.fillText(
-    `${state.shapes.length} polygons`,
+    `${state.polygons.length} polygons`,
     window.innerWidth - 80,
     window.innerHeight - 45
   )

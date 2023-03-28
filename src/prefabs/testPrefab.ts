@@ -6,10 +6,10 @@ export function createTestPrefab(): Polygon[] {
   const items = createDefaultPrefab()
   const numVerts = 5
   const size = 20
-  const testShape = new Polygon(
+  const testPoly = new Polygon(
     new Vec2(200, 300),
     genPolygonVerts(numVerts).map((v) => v.scale(size))
   )
-  testShape.velocity = new Vec2(35, -3)
-  return [...items, testShape]
+  testPoly.velocity = new Vec2(35, -3)
+  return [...items, testPoly]
 }

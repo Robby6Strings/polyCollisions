@@ -6,7 +6,7 @@ const defaultOptions = {
   renderQuadTree: false,
   renderPolyBounds: true,
   renderPolyData: true,
-  renderShapeBackgrounds: false,
+  renderPolyBackgrounds: false,
   randomizeNumVertices: false,
   gravity: 0.7,
   maxPolyVertices: 6,
@@ -18,7 +18,7 @@ const defaultOptions = {
 
 export const state = {
   loopRef: -1,
-  shapes: [] as Polygon[],
+  polygons: [] as Polygon[],
   options: { ...defaultOptions },
   prefab: Prefab.Default,
 }
@@ -30,7 +30,7 @@ export const optionGroups = {
     "renderQuadTree",
     "renderPolyBounds",
     "renderPolyData",
-    "renderShapeBackgrounds",
+    "renderPolyBackgrounds",
     "strokeWidth",
   ],
   Polygons: ["maxPolyVertices", "polySize", "prefab", "randomizeNumVertices"],
@@ -39,17 +39,17 @@ export const optionGroups = {
 
 export const setLoopRef = (num: number) => (state.loopRef = num)
 
-export function updateShapes(fn: { (val: Polygon[]): Polygon[] }) {
-  state.shapes = fn(state.shapes)
+export function updatePolygons(fn: { (val: Polygon[]): Polygon[] }) {
+  state.polygons = fn(state.polygons)
 }
 
-export function addShape(p: Polygon) {
-  state.shapes.push(p)
+export function addPolygon(p: Polygon) {
+  state.polygons.push(p)
 }
 
 export const saveState = () => {
   const serialized = {
-    shapes: state.shapes.map((s) => s.serialize()),
+    polygons: state.polygons.map((s) => s.serialize()),
     options: state.options,
     prefab: state.prefab,
   }
@@ -58,33 +58,46 @@ export const saveState = () => {
 
 export const loadState = (loopFn: { (): void }) => {
   let data = localStorage.getItem("polySandbox")
-  if (!data) return
-  let parsed = JSON.parse(data)
+  if (data) {
+    try {
+      let parsed = JSON.parse(data)
 
-  if ("shapes" in parsed) {
-    state.shapes = (parsed.shapes as IPolygon[]).map((s) =>
-      Polygon.deserialize(s)
-    )
+      if ("polygons" in parsed) {
+        state.polygons = (parsed.polygons as IPolygon[]).map((s) =>
+          Polygon.deserialize(s)
+        )
+      }
+      if ("prefab" in parsed) {
+        state.prefab = parsed.prefab
+      }
+      if ("options" in parsed) {
+        state.options = parsed.options
+      }
+    } catch (error) {
+      localStorage.removeItem("polySandbox")
+      console.log("loadState error - localStorage has been cleared.", {
+        error,
+        data,
+      })
+      loadPrefab(Prefab.Default)
+    }
+  } else {
+    loadPrefab(Prefab.Default)
   }
-  if ("prefab" in parsed) {
-    state.prefab = parsed.prefab
-  }
-  if ("options" in parsed) {
-    state.options = parsed.options
-    setupOptionsUI(loopFn)
-  }
+
+  setupOptionsUI(loopFn)
 }
 
 export const resetOptions = () => (state.options = { ...defaultOptions })
 
 export function loadPrefab(prefab: Prefab) {
-  updateShapes(() => [])
+  updatePolygons(() => [])
   state.prefab = prefab
-  state.shapes = getPrefabCreator(state.prefab)()
+  state.polygons = getPrefabCreator(state.prefab)()
 }
 export const reloadPrefab = () => {
-  updateShapes(() => [])
-  state.shapes = getPrefabCreator(state.prefab)()
+  updatePolygons(() => [])
+  state.polygons = getPrefabCreator(state.prefab)()
 }
 
 //setupOptionsUI()

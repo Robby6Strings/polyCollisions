@@ -1,4 +1,11 @@
-import { loadState, reloadPrefab, saveState } from "./state"
+import { setupOptionsUI } from "./html"
+import {
+  loadState,
+  reloadPrefab,
+  resetOptions,
+  saveState,
+  updatePolygons,
+} from "./state"
 import { Vec2 } from "./vec"
 
 export const inputs = {
@@ -11,11 +18,19 @@ export const keyMap: Map<string, (loopFn: { (): void }) => void> = new Map([
   ["l", (loopFn: { (): void }) => loadState(loopFn)],
   ["s", () => saveState()],
   [
-    "Escape",
+    "escape",
     () => {
       const el = document.querySelector(".options-wrapper")
       if (el) el.classList.toggle("expanded")
     },
   ],
   ["r", () => reloadPrefab()],
+  ["c", () => updatePolygons(() => [])],
+  [
+    "o",
+    (loopFn: { (): void }) => {
+      resetOptions()
+      setupOptionsUI(loopFn)
+    },
+  ],
 ])
