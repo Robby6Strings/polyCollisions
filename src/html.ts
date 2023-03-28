@@ -39,6 +39,7 @@ function createOptionGroup(groupName: string, optionKeys: optionKey[]) {
   )
   wrapper.append(
     Object.assign(document.createElement("h5"), { innerText: groupName }),
+    document.createElement("hr"),
     itemsContainer
   )
   return wrapper
@@ -113,7 +114,7 @@ export function setupOptionsUI(loopFn: { (): void }) {
   if (optsBox) document.body.removeChild(optsBox)
 
   optsBox = Object.assign(document.createElement("div"), {
-    className: "options-wrapper",
+    className: "options-wrapper expanded",
   })
 
   const inner = Object.assign(document.createElement("div"), {
@@ -123,7 +124,6 @@ export function setupOptionsUI(loopFn: { (): void }) {
     ...Object.entries(optionGroups).map(([key, val]) =>
       createOptionGroup(key, val as optionKey[])
     ),
-    document.createElement("hr"),
     Object.assign(document.createElement("button"), {
       type: "button",
       innerText: "Reset polygons",
