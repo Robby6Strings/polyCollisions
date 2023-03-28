@@ -121,7 +121,7 @@ function updatePhysics() {
     const shape = shapes[i]
     shape.isColliding = false
     if (!shape.isStatic) {
-      //shape.rotateBy(shape.angularVelocity)
+      shape.rotateBy(shape.angularVelocity)
 
       // r-click blackhole
       if (inputs.m1) {
@@ -135,8 +135,8 @@ function updatePhysics() {
         shape.velocity.y += Math.sin(gravAngle) * gravForce
       }
 
-      shape.velocity.y += 0.2 // gravity
-      shape.velocity = shape.velocity.multiply(0.975) // friction
+      if (options.gravity) shape.velocity.y += 0.75 // gravity
+      shape.velocity = shape.velocity.multiply(0.935) // friction
       shape.position = shape.position.add(shape.velocity)
       shape.needsUpdate = true
     }

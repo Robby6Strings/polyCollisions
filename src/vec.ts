@@ -55,10 +55,14 @@ export class Vec2 {
     return new Vec2(this.x * val, this.y * val)
   }
 
-  public length() {
+  public length(): number {
     const x = this.x * this.x
     const y = this.y * this.y
     return sqrt(x + y)
+  }
+
+  public magnitude(): number {
+    return this.length()
   }
 
   // public rotate(angle: number): Vec2 {

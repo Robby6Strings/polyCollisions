@@ -179,6 +179,6 @@ export function createPolygon(): Polygon {
     genPolygonVerts(n).map((v) => v.scale(options.shapeScale))
   )
   shape.updateVertices()
-  shape.angularVelocity = 0.0125
+  //shape.angularVelocity = 0.0125
   return shape
 }

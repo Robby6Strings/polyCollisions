@@ -76,20 +76,27 @@ export class SAT {
     const direction = b.position.subtract(a.position).normal()
     const dotProduct = mtv.dot(direction)
 
-    const _mtv = a.isStatic || b.isStatic ? mtv : mtv.multiply(0.5)
+    const _mtv =
+      a.isStatic || b.isStatic ? mtv.multiply(0.9) : mtv.multiply(0.45)
     const displacement1 = dotProduct < 0 ? _mtv.multiply(-1) : _mtv
     const displacement2 = displacement1.multiply(-1)
 
     if (!a.isStatic) {
       const mod = dotProduct < 0 ? displacement1 : displacement2
       a.position = a.position.add(mod)
-      a.velocity = a.velocity.add(mod.multiply(0.1))
+
+      // const V = a.velocity
+      // const angle = Math.atan2(a.velocity.y - 20, a.velocity.x - 20)
+      // const Va = V.multiply(Math.sin(angle)).magnitude() / 200
+      // a.angularVelocity += Va
+
+      a.velocity = a.velocity.add(mod)
       a.needsUpdate = true
     }
     if (!b.isStatic) {
       const mod = dotProduct < 0 ? displacement2 : displacement1
       b.position = b.position.add(mod)
-      b.velocity = b.velocity.add(mod.multiply(0.1))
+      b.velocity = b.velocity.add(mod)
       b.needsUpdate = true
     }
   }
