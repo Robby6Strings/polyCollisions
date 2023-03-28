@@ -1,7 +1,6 @@
 import "./style.css"
 import { SAT } from "./collisions"
 import { createPolygon, Polygon } from "./polygon"
-import { Vec2 } from "./vec"
 import { keyMap, inputs } from "./inputs"
 import { quadTree, TypedRectangle } from "./quadTree"
 import { addShape, loadPrefab, state, updateShapes } from "./state"
@@ -105,23 +104,23 @@ function updatePhysics() {
     }
   }
 }
-function handleCollisions() {
-  for (let i = 0; i < state.shapes.length; i++) {
-    const a = state.shapes[i]
-    for (let j = 0; j < state.shapes.length; j++) {
-      const b = state.shapes[j]
+// function handleCollisions() {
+//   for (let i = 0; i < state.shapes.length; i++) {
+//     const a = state.shapes[i]
+//     for (let j = 0; j < state.shapes.length; j++) {
+//       const b = state.shapes[j]
 
-      if (a == b) continue
+//       if (a == b) continue
 
-      const collision = SAT.checkCollision(a, b)
-      if (collision) {
-        a.isColliding = true
-        b.isColliding = true
-        if (collision) SAT.resolveCollision(collision)
-      }
-    }
-  }
-}
+//       const collision = SAT.checkCollision(a, b)
+//       if (collision) {
+//         a.isColliding = true
+//         b.isColliding = true
+//         if (collision) SAT.resolveCollision(collision)
+//       }
+//     }
+//   }
+// }
 function handleCollisions_QuadTree() {
   for (let i = 0; i < state.shapes.length; i++) {
     const a = state.shapes[i]

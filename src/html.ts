@@ -6,6 +6,8 @@ import {
   state,
   setLoopRef,
   loadPrefab,
+  optionGroups,
+  optionKey,
 } from "./state"
 
 let optsBox: HTMLElement | null
@@ -27,8 +29,22 @@ function getInputType(val: any): string {
   }
   throw new Error("unable to get input type for val with type: " + typeof val)
 }
-
-function createOptionElement(optionKey: string, val: any): HTMLElement {
+function createOptionGroup(groupName: string, optionKeys: optionKey[]) {
+  const wrapper = document.createElement("div")
+  wrapper.className = "option-group"
+  const itemsContainer = document.createElement("div")
+  itemsContainer.className = "option-group-items"
+  itemsContainer.append(
+    ...optionKeys.map((optionKey) => createOptionElement(optionKey))
+  )
+  wrapper.append(
+    Object.assign(document.createElement("h5"), { innerText: groupName }),
+    itemsContainer
+  )
+  return wrapper
+}
+function createOptionElement(optionKey: optionKey): HTMLElement {
+  const val: any = state.options[optionKey]
   let el: HTMLElement
   const wrapperEl = document.createElement("div")
   wrapperEl.className = "option"
@@ -104,8 +120,8 @@ export function setupOptionsUI(loopFn: { (): void }) {
     className: "options",
   })
   inner.append(
-    ...Object.entries(state.options).map(([key, val]) =>
-      createOptionElement(key, val)
+    ...Object.entries(optionGroups).map(([key, val]) =>
+      createOptionGroup(key, val as optionKey[])
     ),
     document.createElement("hr"),
     Object.assign(document.createElement("button"), {

@@ -1,6 +1,7 @@
 import { setupOptionsUI } from "./html"
 import { Polygon, IPolygon } from "./polygon"
 import { getPolygons, getPrefabs, Prefab } from "./prefab"
+
 export const state = {
   loopRef: -1,
   shapes: [] as Polygon[],
@@ -10,7 +11,6 @@ export const state = {
     renderPolyData: true,
     renderShapeBackgrounds: false,
     randomizeNumVertices: false,
-    continuoslySpawn: false,
     gravity: 0.7,
     maxPolyVertices: 6,
     strokeWidth: 1.5,
@@ -18,6 +18,20 @@ export const state = {
     fps: 60,
     prefab: getPrefabs(),
   },
+}
+
+export type optionKey = keyof typeof state.options
+
+export const optionGroups = {
+  Rendering: [
+    "renderQuadTree",
+    "renderPolyBounds",
+    "renderPolyData",
+    "renderShapeBackgrounds",
+    "strokeWidth",
+  ],
+  Polygons: ["maxPolyVertices", "polySize", "prefab", "randomizeNumVertices"],
+  Physics: ["gravity", "fps"],
 }
 
 export const setLoopRef = (num: number) => (state.loopRef = num)
