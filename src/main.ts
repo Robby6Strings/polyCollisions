@@ -2,16 +2,9 @@ import "./style.css"
 import { SAT } from "./collisions"
 import { createPolygon, Polygon } from "./polygon"
 import { Vec2 } from "./vec"
-import { inputs } from "./inputs"
+import { keyMap, inputs } from "./inputs"
 import { quadTree, TypedRectangle } from "./quadTree"
-import {
-  addShape,
-  loadPrefab,
-  loadState,
-  saveState,
-  state,
-  updateShapes,
-} from "./state"
+import { addShape, loadPrefab, state, updateShapes } from "./state"
 import { setupOptionsUI } from "./html"
 import { Prefab } from "./prefab"
 
@@ -40,30 +33,16 @@ loadPrefab(Prefab.Default)
   })
 
   window.addEventListener("keydown", (event) => {
-    const ctrlMap: Map<string, () => void> = new Map([
-      ["l", () => loadState(main)],
-      ["s", () => saveState()],
-      [
-        "Escape",
-        () => {
-          const el = document.querySelector(".options-wrapper")
-          if (el) el.classList.toggle("expanded")
-        },
-      ],
-    ])
-
-    ctrlMap.get(event.key)?.()
+    keyMap.get(event.key)?.(main)
   })
-
   window.addEventListener("resize", () => {
     canvas.width = window.innerWidth
     canvas.height = window.innerHeight
   })
 
   canvas.addEventListener("mousemove", (e) => {
-    const x = e.clientX
-    const y = e.clientY
-    inputs.mPos = new Vec2(x, y)
+    inputs.mPos.x = e.clientX
+    inputs.mPos.y = e.clientY
   })
 }
 

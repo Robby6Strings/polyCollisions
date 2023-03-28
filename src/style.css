@@ -4,6 +4,7 @@
   font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
   font-size: .85rem;
   user-select: none;
+  letter-spacing: .5px;
 }
 
 hr {
@@ -31,9 +32,15 @@ input {
   accent-color: rgb(210, 107, 4);
 }
 button {
-  background-color: #222;
-  color: #ddd;
+  background-color: rgb(210, 107, 4);
+  color: #fff;
   border: 0;
+  opacity: .7;
+  cursor: pointer;
+  transition: opacity .3s;
+}
+button:hover {
+  opacity: .85;
 }
 
 body {
@@ -72,11 +79,13 @@ body {
   background-color: rgb(210, 107, 4);
   width: 2rem;
   height: 2rem;
-  cursor: pointer;
   opacity: .4;
-  transition: opacity .3s;
   font-size: 1.5rem;
 }
+
+.options-wrapper.expanded .handle button {
+  opacity: .65;
+}
 .options-wrapper .handle button:hover {
-  opacity: 1;
+  opacity: .85;
 }
