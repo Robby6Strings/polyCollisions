@@ -56,7 +56,7 @@ export class TypedRectangle<T> extends Rectangle {
 }
 
 class Quadtree<T> {
-  readonly MAX_DEPTH = 3
+  readonly MAX_DEPTH = 4
   readonly MAX_POINTS = 6
   points: TypedPoint<T>[] = []
   rectangles: TypedRectangle<T>[] = []

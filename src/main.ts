@@ -23,8 +23,8 @@ console.log(
     new Vec2(window.innerWidth, window.innerHeight).add(new Vec2(512, 512))
   )
 )
-//loadPrefab(state.prefab)
 loadState(main)
+
 //event listeners
 {
   function toggleMouseInput(btn: number, val: boolean) {
@@ -71,8 +71,6 @@ function main() {
   render(performance.now() - frameStartTime)
 }
 
-//setupOptionsUI(main)
-
 const cullOffscreen = (items: Polygon[]) => {
   return items.filter((s: Polygon) => {
     return (
@@ -86,7 +84,7 @@ const cullOffscreen = (items: Polygon[]) => {
 
 function update() {
   updatePhysics()
-  handleCollisions_QuadTree()
+  handleCollisions()
   updatePolygons(cullOffscreen)
 }
 
@@ -120,23 +118,23 @@ function updatePhysics() {
     }
   }
 }
-// function handleCollisions() {
-//   for (let i = 0; i < state.polygons.length; i++) {
-//     const a = state.polygons[i]
-//     for (let j = 0; j < state.polygons.length; j++) {
-//       const b = state.polygons[j]
+function handleCollisions() {
+  for (let i = 0; i < state.polygons.length; i++) {
+    const a = state.polygons[i]
+    for (let j = 0; j < state.polygons.length; j++) {
+      const b = state.polygons[j]
 
-//       if (a == b) continue
+      if (a == b) continue
 
-//       const collision = SAT.checkCollision(a, b)
-//       if (collision) {
-//         a.isColliding = true
-//         b.isColliding = true
-//         if (collision) SAT.resolveCollision(collision)
-//       }
-//     }
-//   }
-// }
+      const collision = SAT.checkCollision(a, b)
+      if (collision) {
+        a.isColliding = true
+        b.isColliding = true
+        if (collision) SAT.resolveCollision(collision)
+      }
+    }
+  }
+}
 function handleCollisions_QuadTree() {
   for (let i = 0; i < state.polygons.length; i++) {
     const a = state.polygons[i]

@@ -4,8 +4,8 @@ import { getPrefabCreator, getPrefabs, Prefab } from "./prefab"
 
 export const defaultOptions = {
   renderQuadTree: false,
-  renderPolyBounds: true,
-  renderPolyData: true,
+  renderPolyBounds: false,
+  renderPolyData: false,
   renderPolyBackgrounds: false,
   randomizeNumVertices: false,
   gravity: 0.7,
@@ -58,7 +58,7 @@ export const saveState = () => {
 }
 export const deleteState = () => {
   localStorage.removeItem("polySandbox")
-  loadPrefab(Prefab.Default)
+  //loadPrefab(Prefab.Default)
 }
 
 export const loadState = (loopFn: { (): void }) => {

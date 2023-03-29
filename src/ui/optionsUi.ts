@@ -1,4 +1,4 @@
-import { ElementEventProps, GenericEventProps, Rendr } from "./rendr"
+import { GenericEventProps, Rendr } from "./rendr"
 import { Prefab, strToPrefab } from "../prefab"
 import {
   updatePolygons,
