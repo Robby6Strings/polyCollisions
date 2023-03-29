@@ -71,6 +71,11 @@ body {
   transition: margin 0.25s ease;
   margin-right: -240px
 }
+.options-wrapper .buttons {
+  display:flex;
+  flex-direction: column;
+  gap: .5rem;
+}
 .options-wrapper.expanded {
   margin-right: 0
 }

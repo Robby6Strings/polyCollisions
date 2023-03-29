@@ -73,7 +73,7 @@ function main() {
 
 //setupOptionsUI(main)
 
-const cullOffscreenPolygons = (items: Polygon[]) => {
+const cullOffscreen = (items: Polygon[]) => {
   return items.filter((s: Polygon) => {
     return (
       s.position.x < window.innerWidth + 100 &&
@@ -85,9 +85,9 @@ const cullOffscreenPolygons = (items: Polygon[]) => {
 }
 
 function update() {
-  updatePolygons(cullOffscreenPolygons)
   updatePhysics()
   handleCollisions_QuadTree()
+  updatePolygons(cullOffscreen)
 }
 
 function updatePhysics() {
@@ -114,6 +114,7 @@ function updatePhysics() {
 
       poly.velocity = poly.velocity.multiply(0.935) // friction
       poly.angularVelocity = poly.angularVelocity * 0.4
+
       poly.position = poly.position.add(poly.velocity)
       poly.needsUpdate = true
     }

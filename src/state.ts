@@ -24,6 +24,7 @@ export const state = {
 }
 
 export type optionKey = keyof typeof defaultOptions
+export type stateKey = "prefab"
 
 export const optionGroups = {
   Rendering: [
