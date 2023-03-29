@@ -1,17 +1,18 @@
 import { setupOptionsUI } from "./ui/optionsUi"
 import { Polygon, IPolygon } from "./polygon"
 import { getPrefabCreator, getPrefabs, Prefab } from "./prefab"
+import { Emitter, IEmitter } from "./emitter"
 
 export const defaultOptions = {
   renderQuadTree: false,
   renderPolyBounds: false,
   renderPolyData: false,
   renderPolyBackgrounds: false,
-  randomizeNumVertices: false,
+  randomizeNumVertices: true,
   gravity: 0.7,
   maxPolyVertices: 6,
   strokeWidth: 2,
-  polySize: 20,
+  polySize: 16,
   fps: 60,
   prefab: getPrefabs(),
 }
@@ -19,6 +20,7 @@ export const defaultOptions = {
 export const state = {
   loopRef: -1,
   polygons: [] as Polygon[],
+  emitters: [] as Emitter[],
   options: { ...defaultOptions },
   prefab: Prefab.Default,
 }
@@ -44,22 +46,21 @@ export function updatePolygons(fn: { (val: Polygon[]): Polygon[] }) {
   state.polygons = fn(state.polygons)
 }
 
-export function addPolygon(p: Polygon) {
+export function addPolygon(p: Polygon | null) {
+  if (!p) return
   state.polygons.push(p)
 }
 
 export const saveState = () => {
   const serialized = {
     polygons: state.polygons.map((s) => s.serialize()),
+    emitters: state.emitters.map((e) => e.serialize()),
     options: state.options,
     prefab: state.prefab,
   }
   localStorage.setItem("polySandbox", JSON.stringify(serialized))
 }
-export const deleteState = () => {
-  localStorage.removeItem("polySandbox")
-  //loadPrefab(Prefab.Default)
-}
+export const deleteState = () => localStorage.removeItem("polySandbox")
 
 export const loadState = (loopFn: { (): void }) => {
   let data = localStorage.getItem("polySandbox")
@@ -70,6 +71,11 @@ export const loadState = (loopFn: { (): void }) => {
       if ("polygons" in parsed) {
         state.polygons = (parsed.polygons as IPolygon[]).map((s) =>
           Polygon.deserialize(s)
+        )
+      }
+      if ("emitters" in parsed) {
+        state.emitters = (parsed.emitters as IEmitter[]).map((e) =>
+          Emitter.deserialize(e)
         )
       }
       if ("prefab" in parsed) {
@@ -95,11 +101,12 @@ export const loadState = (loopFn: { (): void }) => {
 export const resetOptions = () => (state.options = { ...defaultOptions })
 
 export function loadPrefab(prefab: Prefab) {
-  updatePolygons(() => [])
   state.prefab = prefab
-  state.polygons = getPrefabCreator(state.prefab)()
+  reloadPrefab()
 }
 export const reloadPrefab = () => {
   updatePolygons(() => [])
-  state.polygons = getPrefabCreator(state.prefab)()
+  const data = getPrefabCreator(state.prefab)()
+  state.polygons = data.polygons
+  state.emitters = data.emitters ?? []
 }

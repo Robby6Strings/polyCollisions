@@ -1,7 +1,9 @@
+import { Emitter } from "../emitter"
 import { genPolygonVerts, Polygon } from "../polygon"
+import { IPrefab } from "../prefab"
 import { Vec2 } from "../vec"
 
-export function createBucketPrefab(): Polygon[] {
+export function createBucketPrefab(): IPrefab {
   const numVerts = 5
   const size = 20
   const wallVertices: Array<Vec2> = [
@@ -25,21 +27,10 @@ export function createBucketPrefab(): Polygon[] {
     true
   )
 
-  const res = [wall, wall2, wall3, wall4]
+  const polygons = [wall, wall2, wall3, wall4]
 
-  for (let i = 0; i < 10; i++) {
-    res.push(
-      Object.assign(
-        new Polygon(
-          new Vec2(200, 300),
-          genPolygonVerts(numVerts).map((v) => v.scale(size))
-        ),
-        {
-          velocity: new Vec2(5, -3),
-        }
-      )
-    )
+  return {
+    polygons,
+    emitters: [new Emitter(new Vec2(100, 100), new Vec2(5, 0), 400)],
   }
-
-  return res
 }

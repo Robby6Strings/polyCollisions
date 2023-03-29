@@ -59,6 +59,9 @@ function main() {
   if (inputs.m0) {
     addPolygon(createPolygon())
   }
+  for (let i = 0; i < state.emitters.length; i++) {
+    addPolygon(state.emitters[i].update(state.options.fps))
+  }
   const frameStartTime = performance.now()
   update()
   quadTree.clear()

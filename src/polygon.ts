@@ -223,15 +223,16 @@ export function genPolygonVerts(n: number): Vec2[] {
   return verts
 }
 
-export function createPolygon(): Polygon {
+export function createPolygon(pos?: Vec2, vel?: Vec2): Polygon {
   const n = state.options.randomizeNumVertices
     ? Math.floor(3 + Math.random() * (state.options.maxPolyVertices - 3))
     : state.options.maxPolyVertices
 
   const poly = new Polygon(
-    inputs.mPos.copy(),
+    pos ?? inputs.mPos.copy(),
     genPolygonVerts(n).map((v) => v.scale(state.options.polySize))
   )
+  if (vel) poly.velocity = vel
   poly.updateVertices()
   return poly
 }
