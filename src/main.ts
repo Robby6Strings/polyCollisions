@@ -76,7 +76,7 @@ loadState(main)
 }
 
 function main() {
-  if (inputs.m0) {
+  if (!state.creatingEmitter && inputs.m0) {
     addPolygon(createPolygon())
   }
   for (let i = 0; i < state.emitters.length; i++) {

@@ -1,4 +1,4 @@
-import { subscribe, unsubscribe } from "../state"
+import { stateKey, subscribe, unsubscribe } from "../state"
 
 export type EventHandlerRef = {
   element: HTMLElement
@@ -64,6 +64,12 @@ export class Rendr {
     while (eventHandlerRefs.length > 0) {
       const item = eventHandlerRefs.pop()
       item?.element.removeEventListener("change", item.callback)
+    }
+  }
+
+  static resetElementSubscriptions() {
+    while (elementSubscriptions.length > 0) {
+      elementSubscriptions.pop()?.onDestroyed()
     }
   }
 
@@ -138,5 +144,24 @@ export class Rendr {
       innerText,
       ...eventHandlers,
     })
+  }
+  static reactiveElement(
+    el: HTMLElement,
+    stateKey: stateKey,
+    subscriptionCallback: { (el: HTMLElement, newVal: any): void }
+  ): HTMLElement {
+    const originKey = `${Math.random().toString(12).substring(10)}_${stateKey}`
+
+    subscribe(originKey, stateKey, (newVal) => {
+      subscriptionCallback(el, newVal)
+    })
+
+    elementSubscriptions.push({
+      element: el,
+      onDestroyed: () => {
+        unsubscribe(originKey, stateKey)
+      },
+    })
+    return el
   }
 }

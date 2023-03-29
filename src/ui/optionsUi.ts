@@ -18,7 +18,16 @@ import {
 
 let optsBox: HTMLElement | null
 
-const { element, div, button, select, input, resetEventHandlers } = Rendr
+const {
+  element,
+  reactiveElement,
+  div,
+  button,
+  select,
+  input,
+  resetEventHandlers,
+  resetElementSubscriptions,
+} = Rendr
 
 function createOptionGroup(
   groupName: string,
@@ -92,6 +101,7 @@ function createOption(
 
 export function setupOptionsUI(loopFn: { (): void }) {
   resetEventHandlers()
+  resetElementSubscriptions()
 
   if (optsBox) document.body.removeChild(optsBox)
 
@@ -127,7 +137,7 @@ export function setupOptionsUI(loopFn: { (): void }) {
               setState((state) => {
                 return {
                   ...state,
-                  loopRef: setInterval(loopFn, 1000 / state.options.fps),
+                  loopRef: setInterval(loopFn, 1000 / fps),
                   options: {
                     ...state.options,
                     fps,
@@ -156,21 +166,19 @@ export function setupOptionsUI(loopFn: { (): void }) {
         button("Save State [S]", { onClick: () => saveState() }),
         button("Load State [L]", { onClick: () => loadState(loopFn) }),
         button("Delete Save [D]", { onClick: () => deleteState() }),
-        button("Create Emitter [E]", {
-          onClick: () => {
-            setState((state) => {
-              return { ...state, creatingEmitter: !state.creatingEmitter }
-            })
-          },
-          onCreated: (el: HTMLElement) => {
-            subscribe("button_creatingEmitter", "creatingEmitter", (newVal) => {
-              el.className = newVal ? "active" : ""
-            })
-          },
-          onDestroyed: () => {
-            unsubscribe("button_creatingEmitter", "creatingEmitter")
-          },
-        }),
+        reactiveElement(
+          button("Create Emitter [E]", {
+            onClick: () => {
+              setState((state) => {
+                return { ...state, creatingEmitter: !state.creatingEmitter }
+              })
+            },
+          }),
+          "creatingEmitter",
+          (el, newVal) => {
+            el.className = newVal ? "active" : ""
+          }
+        ),
       ]),
     ]),
   ])
