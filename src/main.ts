@@ -3,7 +3,7 @@ import { SAT } from "./collisions"
 import { createPolygon, Polygon } from "./polygon"
 import { keyMap, inputs } from "./inputs"
 import { quadTree, TypedRectangle } from "./quadTree"
-import { addPolygon, loadState, state } from "./state"
+import { addPolygon, loadState, state, updatePolygons } from "./state"
 import { normalize } from "./math"
 import { Vec2 } from "./vec"
 const canvas = document.createElement("canvas")
@@ -73,22 +73,23 @@ function main() {
 
 //setupOptionsUI(main)
 
-function update() {
-  //cull offscreen polygons
-  // updatePolygons((items: Polygon[]) => {
-  //   return items.filter((s: Polygon) => {
-  //     return (
-  //       s.position.x < window.innerWidth + 100 &&
-  //       s.position.x > -100 &&
-  //       s.position.y < window.innerHeight + 100 &&
-  //       s.position.y > -100
-  //     )
-  //   })
-  // })
+const cullOffscreenPolygons = (items: Polygon[]) => {
+  return items.filter((s: Polygon) => {
+    return (
+      s.position.x < window.innerWidth + 100 &&
+      s.position.x > -100 &&
+      s.position.y < window.innerHeight + 100 &&
+      s.position.y > -100
+    )
+  })
+}
 
+function update() {
+  updatePolygons(cullOffscreenPolygons)
   updatePhysics()
   handleCollisions_QuadTree()
 }
+
 function updatePhysics() {
   for (let i = 0; i < state.polygons.length; i++) {
     const poly = state.polygons[i]
@@ -169,20 +170,14 @@ function render(dt: number) {
 
   if (state.options.renderQuadTree) quadTree.render(ctx)
 
+  const { innerWidth: w, innerHeight: h } = window
+
   ctx.fillStyle = "orange"
-  ctx.fillText(
-    `${state.polygons.length} polygons`,
-    window.innerWidth - 80,
-    window.innerHeight - 45
-  )
-  ctx.fillText(
-    `update: ${dt}ms`,
-    window.innerWidth - 80,
-    window.innerHeight - 30
-  )
+  ctx.fillText(`${state.polygons.length} polygons`, w - 80, h - 45)
+  ctx.fillText(`update: ${dt}ms`, w - 80, h - 30)
   ctx.fillText(
     `render: ${performance.now() - renderStartTime}ms`,
-    window.innerWidth - 80,
-    window.innerHeight - 15
+    w - 80,
+    h - 15
   )
 }
