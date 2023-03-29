@@ -32,6 +32,27 @@ export class Emitter implements IEmitter {
     }
   }
 
+  render(ctx: CanvasRenderingContext2D) {
+    let radialGradient = ctx.createRadialGradient(
+      this.position.x,
+      this.position.y,
+      1,
+      this.position.x,
+      this.position.y,
+      10
+    )
+    radialGradient.addColorStop(0, "rgba(255, 150, 255, 0.5)")
+    radialGradient.addColorStop(0.25, "rgba(255, 150, 255, 0.25)")
+    radialGradient.addColorStop(1, "rgba(255, 150, 255, 0)")
+
+    ctx.beginPath()
+
+    ctx.arc(this.position.x, this.position.y, 10, 0, Math.PI * 2, false)
+    ctx.fillStyle = radialGradient
+    ctx.fill()
+    ctx.closePath()
+  }
+
   static deserialize(e: IEmitter): Emitter {
     return new Emitter(
       Vec2.deserialize(e.position),

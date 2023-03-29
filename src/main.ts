@@ -200,6 +200,10 @@ function render(dt: number) {
   const renderStartTime = performance.now()
   ctx.clearRect(0, 0, canvas.width, canvas.height)
 
+  for (let i = 0; i < state.emitters.length; i++) {
+    state.emitters[i].render(ctx)
+  }
+
   for (let i = 0; i < state.polygons.length; i++) {
     const poly = state.polygons[i]
     poly.render(ctx)
