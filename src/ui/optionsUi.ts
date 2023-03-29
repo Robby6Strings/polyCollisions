@@ -1,5 +1,5 @@
 import { Rendr } from "./rendr"
-import { strToPrefab } from "./prefab"
+import { strToPrefab } from "../prefab"
 import {
   updatePolygons,
   saveState,
@@ -13,7 +13,7 @@ import {
   reloadPrefab,
   defaultOptions,
   deleteState,
-} from "./state"
+} from "../state"
 
 let optsBox: HTMLElement | null
 

@@ -1,4 +1,4 @@
-import { setupOptionsUI } from "./optionsUi"
+import { setupOptionsUI } from "./ui/optionsUi"
 import { Polygon, IPolygon } from "./polygon"
 import { getPrefabCreator, getPrefabs, Prefab } from "./prefab"
 
