@@ -1,6 +1,7 @@
 import { Emitter } from "../emitter"
 import { Polygon } from "../polygon"
 import { IPrefab } from "../prefab"
+import { state } from "../state"
 import { Vec2 } from "../vec"
 
 export function createBucketPrefab(): IPrefab {
@@ -29,6 +30,6 @@ export function createBucketPrefab(): IPrefab {
 
   return {
     polygons,
-    emitters: [new Emitter(new Vec2(100, 100), new Vec2(5, 0), 400)],
+    emitters: [new Emitter(new Vec2(100, 100), new Vec2(5, 0), 500)],
   }
 }

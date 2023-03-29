@@ -3,7 +3,7 @@ import { SAT } from "./collisions"
 import { createPolygon, Polygon } from "./polygon"
 import { keyMap, inputs } from "./inputs"
 import { quadTree, TypedRectangle } from "./quadTree"
-import { addPolygon, loadState, setState, state, subscribe } from "./state"
+import { loadState, setState, state, subscribe } from "./state"
 import { normalize } from "./math"
 import { Vec2 } from "./vec"
 import { Emitter } from "./emitter"
@@ -44,7 +44,11 @@ loadState(main)
           ...state,
           emitters: [
             ...state.emitters,
-            new Emitter(inputs.mPos.copy(), new Vec2(), 500),
+            new Emitter(
+              inputs.mPos.copy(),
+              new Vec2(),
+              state.options.spawnCooldown
+            ),
           ],
         }
       })
@@ -76,12 +80,23 @@ loadState(main)
 }
 
 function main() {
+  let newPolygons: Polygon[] = []
   if (!state.creatingEmitter && inputs.m0) {
-    addPolygon(createPolygon())
+    newPolygons.push(createPolygon())
   }
   for (let i = 0; i < state.emitters.length; i++) {
-    addPolygon(state.emitters[i].update(state.options.fps))
+    const poly = state.emitters[i].update(state.options.fps)
+    if (poly) newPolygons.push(poly)
   }
+  if (newPolygons.length > 0) {
+    setState((state) => {
+      return {
+        ...state,
+        polygons: [...state.polygons, ...newPolygons],
+      }
+    })
+  }
+
   const frameStartTime = performance.now()
   update()
   quadTree.clear()

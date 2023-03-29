@@ -15,6 +15,25 @@ export const defaultOptions = {
   polySize: 16,
   fps: 60,
   prefab: getPrefabs(),
+  spawnCooldown: 450,
+}
+export type optionKey = keyof typeof defaultOptions
+
+export const optionGroups = {
+  Rendering: [
+    "renderQuadTree",
+    "renderPolyBounds",
+    "renderPolyData",
+    "renderPolyBackgrounds",
+    "strokeWidth",
+  ],
+  Polygons: [
+    "maxPolyVertices",
+    "polySize",
+    "randomizeNumVertices",
+    "spawnCooldown",
+  ],
+  Physics: ["gravity"],
 }
 
 export type observerCallback = { (newValue: any): any }
@@ -28,6 +47,7 @@ const _state = {
   prefab: Prefab.Default,
   creatingEmitter: false,
 }
+export type stateKey = "prefab" | "creatingEmitter"
 
 export const state = new Proxy(_state, {
   set: function (target, prop, value) {
@@ -57,7 +77,6 @@ export const subscribe = (
   newMap.set(originKey, callback)
   stateObservers.set(stateKey, newMap)
 }
-
 export const unsubscribe = (
   originKey: string,
   stateKey: keyof typeof state
@@ -66,29 +85,8 @@ export const unsubscribe = (
   if (!keyObservers) return
   keyObservers.delete(originKey)
 }
-
 export const setState = (val: { (s: typeof state): typeof state }) => {
   Object.assign(state, val(state))
-}
-
-export type optionKey = keyof typeof defaultOptions
-export type stateKey = "prefab" | "creatingEmitter"
-
-export const optionGroups = {
-  Rendering: [
-    "renderQuadTree",
-    "renderPolyBounds",
-    "renderPolyData",
-    "renderPolyBackgrounds",
-    "strokeWidth",
-  ],
-  Polygons: ["maxPolyVertices", "polySize", "randomizeNumVertices"],
-  Physics: ["gravity"],
-}
-
-export function addPolygon(p: Polygon | null) {
-  if (!p) return
-  state.polygons.push(p)
 }
 
 export const saveState = () => {

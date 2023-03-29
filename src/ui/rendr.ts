@@ -150,7 +150,8 @@ export class Rendr {
     stateKey: stateKey,
     subscriptionCallback: { (el: HTMLElement, newVal: any): void }
   ): HTMLElement {
-    const originKey = `${Math.random().toString(12).substring(10)}_${stateKey}`
+    const hash = Math.random().toString(12).substring(10)
+    const originKey = `${hash}_${stateKey}`
 
     subscribe(originKey, stateKey, (newVal) => {
       subscriptionCallback(el, newVal)
