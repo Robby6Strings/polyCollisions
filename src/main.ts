@@ -3,7 +3,7 @@ import { SAT } from "./collisions"
 import { createPolygon, Polygon } from "./polygon"
 import { keyMap, inputs } from "./inputs"
 import { quadTree, TypedRectangle } from "./quadTree"
-import { addPolygon, loadState, state, updatePolygons } from "./state"
+import { addPolygon, loadState, state } from "./state"
 import { normalize } from "./math"
 import { Vec2 } from "./vec"
 const canvas = document.createElement("canvas")
