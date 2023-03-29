@@ -1,3 +1,4 @@
+import { generateUUID } from "../math"
 import { stateKey, subscribe, unsubscribe } from "../state"
 
 export type EventHandlerRef = {
@@ -150,8 +151,7 @@ export class Rendr {
     stateKey: stateKey,
     subscriptionCallback: { (el: HTMLElement, newVal: any): void }
   ): HTMLElement {
-    const hash = Math.random().toString(12).substring(10)
-    const originKey = `${hash}_${stateKey}`
+    const originKey = generateUUID()
 
     subscribe(originKey, stateKey, (newVal) => {
       subscriptionCallback(el, newVal)
