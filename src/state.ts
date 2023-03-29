@@ -23,6 +23,11 @@ export const state = {
   emitters: [] as Emitter[],
   options: { ...defaultOptions },
   prefab: Prefab.Default,
+  creatingEmitter: false,
+}
+
+export const setState = (val: { (s: typeof state): typeof state }) => {
+  Object.assign(state, val(state))
 }
 
 export type optionKey = keyof typeof defaultOptions
@@ -38,12 +43,6 @@ export const optionGroups = {
   ],
   Polygons: ["maxPolyVertices", "polySize", "randomizeNumVertices"],
   Physics: ["gravity"],
-}
-
-export const setLoopRef = (num: number) => (state.loopRef = num)
-
-export function updatePolygons(fn: { (val: Polygon[]): Polygon[] }) {
-  state.polygons = fn(state.polygons)
 }
 
 export function addPolygon(p: Polygon | null) {
@@ -67,23 +66,19 @@ export const loadState = (loopFn: { (): void }) => {
   if (data) {
     try {
       let parsed = JSON.parse(data)
-
-      if ("polygons" in parsed) {
-        state.polygons = (parsed.polygons as IPolygon[]).map((s) =>
-          Polygon.deserialize(s)
-        )
-      }
-      if ("emitters" in parsed) {
-        state.emitters = (parsed.emitters as IEmitter[]).map((e) =>
-          Emitter.deserialize(e)
-        )
-      }
-      if ("prefab" in parsed) {
-        state.prefab = parsed.prefab
-      }
-      if ("options" in parsed) {
-        state.options = parsed.options
-      }
+      setState((state) => {
+        return {
+          ...state,
+          polygons: (parsed.polygons ?? ([] as IPolygon[])).map((s: IPolygon) =>
+            Polygon.deserialize(s)
+          ),
+          emitters: (parsed.emitters ?? ([] as IEmitter[])).map((e: IEmitter) =>
+            Emitter.deserialize(e)
+          ),
+          prefab: parsed.prefab ?? Prefab.Default,
+          options: parsed.options ?? { ...defaultOptions },
+        }
+      })
     } catch (error) {
       console.log("loadState error - localStorage has been cleared.", {
         error,
@@ -101,12 +96,12 @@ export const loadState = (loopFn: { (): void }) => {
 export const resetOptions = () => (state.options = { ...defaultOptions })
 
 export function loadPrefab(prefab: Prefab) {
-  state.prefab = prefab
+  setState((state) => Object.assign(state, { prefab }))
   reloadPrefab()
 }
 export const reloadPrefab = () => {
-  updatePolygons(() => [])
-  const data = getPrefabCreator(state.prefab)()
-  state.polygons = data.polygons
-  state.emitters = data.emitters ?? []
+  const { polygons, emitters } = getPrefabCreator(state.prefab)()
+  setState((state) => {
+    return { ...state, polygons, emitters: emitters ?? [] }
+  })
 }

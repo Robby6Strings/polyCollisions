@@ -5,7 +5,7 @@ import {
   reloadPrefab,
   resetOptions,
   saveState,
-  updatePolygons,
+  setState,
 } from "./state"
 import { Vec2 } from "./vec"
 
@@ -15,18 +15,13 @@ export const inputs = {
   mPos: new Vec2(),
 }
 
-export const keyMap: Map<string, (loopFn: { (): void }) => void> = new Map([
+type keyMap = Map<string, (loopFn: { (): void }) => void>
+
+export const keyMap: keyMap = new Map([
   ["l", (loopFn: { (): void }) => loadState(loopFn)],
   ["s", () => saveState()],
-  [
-    "escape",
-    () => {
-      const el = document.querySelector(".options-wrapper")
-      if (el) el.classList.toggle("expanded")
-    },
-  ],
   ["r", () => reloadPrefab()],
-  ["c", () => updatePolygons(() => [])],
+  ["d", () => deleteState()],
   [
     "o",
     (loopFn: { (): void }) => {
@@ -34,5 +29,27 @@ export const keyMap: Map<string, (loopFn: { (): void }) => void> = new Map([
       setupOptionsUI(loopFn)
     },
   ],
-  ["d", () => deleteState()],
+  [
+    "e",
+    () => {
+      setState((s) => {
+        return { ...s, creatingEmitter: true }
+      })
+    },
+  ],
+  [
+    "c",
+    () => {
+      setState((s) => {
+        return { ...s, polygons: [] }
+      })
+    },
+  ],
+  [
+    "escape",
+    () => {
+      const el = document.querySelector(".options-wrapper")
+      if (el) el.classList.toggle("expanded")
+    },
+  ],
 ])

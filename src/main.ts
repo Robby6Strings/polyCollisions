@@ -3,9 +3,10 @@ import { SAT } from "./collisions"
 import { createPolygon, Polygon } from "./polygon"
 import { keyMap, inputs } from "./inputs"
 import { quadTree, TypedRectangle } from "./quadTree"
-import { addPolygon, loadState, state, updatePolygons } from "./state"
+import { addPolygon, loadState, setState, state } from "./state"
 import { normalize } from "./math"
 import { Vec2 } from "./vec"
+import { Emitter } from "./emitter"
 const canvas = document.createElement("canvas")
 canvas.width = window.innerWidth
 canvas.height = window.innerHeight
@@ -33,6 +34,18 @@ loadState(main)
 
   canvas.addEventListener("mousedown", (event) => {
     toggleMouseInput(event.button, true)
+    if (state.creatingEmitter) {
+      setState((state) => {
+        return {
+          ...state,
+          emitters: [
+            ...state.emitters,
+            new Emitter(inputs.mPos.copy(), new Vec2(), 500),
+          ],
+          creatingEmitter: false,
+        }
+      })
+    }
   })
   canvas.addEventListener("mouseup", (event) => {
     toggleMouseInput(event.button, false)
@@ -88,7 +101,9 @@ const cullOffscreen = (items: Polygon[]) => {
 function update() {
   updatePhysics()
   handleCollisions()
-  updatePolygons(cullOffscreen)
+  setState((state) => {
+    return { ...state, polygons: cullOffscreen(state.polygons) }
+  })
 }
 
 function updatePhysics() {

@@ -1,11 +1,9 @@
 import { GenericEventProps, Rendr } from "./rendr"
 import { Prefab, strToPrefab } from "../prefab"
 import {
-  updatePolygons,
   saveState,
   loadState,
   state,
-  setLoopRef,
   loadPrefab,
   optionGroups,
   optionKey,
@@ -13,6 +11,7 @@ import {
   reloadPrefab,
   defaultOptions,
   deleteState,
+  setState,
 } from "../state"
 
 let optsBox: HTMLElement | null
@@ -44,12 +43,18 @@ function createOption(
   const onChange = events.onChange
     ? events.onChange
     : (el: HTMLElement) => {
-        Object.assign(state.options, {
-          [key]: Array.isArray(val)
-            ? (el as HTMLSelectElement).value
-            : typeof val === "boolean"
-            ? (el as HTMLInputElement).checked
-            : parseFloat((el as HTMLInputElement).value),
+        setState((state) => {
+          return {
+            ...state,
+            options: {
+              ...state.options,
+              [key]: Array.isArray(val)
+                ? (el as HTMLSelectElement).value
+                : typeof val === "boolean"
+                ? (el as HTMLInputElement).checked
+                : parseFloat((el as HTMLInputElement).value),
+            },
+          }
         })
       }
 
@@ -105,15 +110,26 @@ export function setupOptionsUI(loopFn: { (): void }) {
           createOption("prefab", state.options.prefab, {
             onCreated: (el) => ((el as HTMLSelectElement).value = state.prefab),
             onChange: (el) => {
-              updatePolygons(() => [])
+              setState((state) => {
+                return { ...state, polygons: [] }
+              })
               loadPrefab(strToPrefab((el as HTMLSelectElement).value))
             },
           }),
           createOption("fps", state.options.fps, {
             onChange: (el) => {
-              state.options.fps = parseInt((el as HTMLInputElement).value)
               clearInterval(state.loopRef)
-              setLoopRef(setInterval(loopFn, 1000 / state.options.fps))
+              const fps = parseInt((el as HTMLInputElement).value)
+              setState((state) => {
+                return {
+                  ...state,
+                  loopRef: setInterval(loopFn, 1000 / state.options.fps),
+                  options: {
+                    ...state.options,
+                    fps,
+                  },
+                }
+              })
             },
           }),
         ]),
@@ -121,7 +137,11 @@ export function setupOptionsUI(loopFn: { (): void }) {
 
       div("buttons", [
         button("Reload Polygon Prefab [R]", () => reloadPrefab()),
-        button("Clear Polygons [C]", () => updatePolygons(() => [])),
+        button("Clear Polygons [C]", () =>
+          setState((state) => {
+            return { ...state, polygons: [] }
+          })
+        ),
         button("Reset Options [O]", () => {
           resetOptions()
           setupOptionsUI(loopFn)
@@ -129,12 +149,22 @@ export function setupOptionsUI(loopFn: { (): void }) {
         button("Save State [S]", () => saveState()),
         button("Load State [L]", () => loadState(loopFn)),
         button("Delete Save [D]", () => deleteState()),
+        button("Create Emitter [E]", () => {
+          setState((state) => {
+            return { ...state, creatingEmitter: true }
+          })
+        }),
       ]),
     ]),
   ])
 
   clearInterval(state.loopRef)
-  setLoopRef(setInterval(loopFn, 1000 / state.options.fps))
+  setState((state) => {
+    return {
+      ...state,
+      loopRef: setInterval(loopFn, 1000 / state.options.fps),
+    }
+  })
 
   document.body.appendChild(optsBox)
 }
