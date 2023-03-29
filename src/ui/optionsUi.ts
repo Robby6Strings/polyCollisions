@@ -12,6 +12,8 @@ import {
   defaultOptions,
   deleteState,
   setState,
+  subscribe,
+  unsubscribe,
 } from "../state"
 
 let optsBox: HTMLElement | null
@@ -94,8 +96,10 @@ export function setupOptionsUI(loopFn: { (): void }) {
   if (optsBox) document.body.removeChild(optsBox)
 
   const handle = div("handle", [
-    button("=", () => {
-      document.querySelector(".options-wrapper")?.classList.toggle("expanded")
+    button("=", {
+      onClick: () => {
+        document.querySelector(".options-wrapper")?.classList.toggle("expanded")
+      },
     }),
   ])
 
@@ -136,23 +140,36 @@ export function setupOptionsUI(loopFn: { (): void }) {
       ]),
 
       div("buttons", [
-        button("Reload Polygon Prefab [R]", () => reloadPrefab()),
-        button("Clear Polygons [C]", () =>
-          setState((state) => {
-            return { ...state, polygons: [] }
-          })
-        ),
-        button("Reset Options [O]", () => {
-          resetOptions()
-          setupOptionsUI(loopFn)
+        button("Reload Polygon Prefab [R]", { onClick: () => reloadPrefab() }),
+        button("Clear Polygons [C]", {
+          onClick: () =>
+            setState((state) => {
+              return { ...state, polygons: [] }
+            }),
         }),
-        button("Save State [S]", () => saveState()),
-        button("Load State [L]", () => loadState(loopFn)),
-        button("Delete Save [D]", () => deleteState()),
-        button("Create Emitter [E]", () => {
-          setState((state) => {
-            return { ...state, creatingEmitter: true }
-          })
+        button("Reset Options [O]", {
+          onClick: () => {
+            resetOptions()
+            setupOptionsUI(loopFn)
+          },
+        }),
+        button("Save State [S]", { onClick: () => saveState() }),
+        button("Load State [L]", { onClick: () => loadState(loopFn) }),
+        button("Delete Save [D]", { onClick: () => deleteState() }),
+        button("Create Emitter [E]", {
+          onClick: () => {
+            setState((state) => {
+              return { ...state, creatingEmitter: !state.creatingEmitter }
+            })
+          },
+          onCreated: (el: HTMLElement) => {
+            subscribe("button_creatingEmitter", "creatingEmitter", (newVal) => {
+              el.className = newVal ? "active" : ""
+            })
+          },
+          onDestroyed: () => {
+            unsubscribe("button_creatingEmitter", "creatingEmitter")
+          },
         }),
       ]),
     ]),

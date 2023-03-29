@@ -33,7 +33,7 @@ export const keyMap: keyMap = new Map([
     "e",
     () => {
       setState((s) => {
-        return { ...s, creatingEmitter: true }
+        return { ...s, creatingEmitter: !s.creatingEmitter }
       })
     },
   ],

@@ -57,6 +57,9 @@ button {
 button:hover {
   opacity: .85;
 }
+button.active {
+  background-color: rgb(149, 77, 5);
+}
 
 body {
   background: #05090e;

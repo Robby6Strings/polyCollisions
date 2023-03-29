@@ -3,41 +3,20 @@ import { SAT } from "./collisions"
 import { createPolygon, Polygon } from "./polygon"
 import { keyMap, inputs } from "./inputs"
 import { quadTree, TypedRectangle } from "./quadTree"
-import {
-  addPolygon,
-  loadState,
-  setState,
-  state,
-  subscribe,
-  unsubscribe,
-} from "./state"
+import { addPolygon, loadState, setState, state, subscribe } from "./state"
 import { normalize } from "./math"
 import { Vec2 } from "./vec"
 import { Emitter } from "./emitter"
-import { Rendr } from "./ui/rendr"
 const canvas = document.createElement("canvas")
 canvas.width = window.innerWidth
 canvas.height = window.innerHeight
 document.body.appendChild(canvas)
 const ctx = canvas.getContext("2d")
 
-// subscribe("main_creatingEmitter", "creatingEmitter", (newVal) => {
-//   console.log("subcription fired!", newVal)
-// })
-
-document.body.appendChild(
-  Rendr.element("div", {
-    className: "testDiv",
-    onCreated: (el: HTMLElement) => {
-      subscribe("main_creatingEmitter", "creatingEmitter", (newVal) => {
-        el.className = newVal ? "testDiv_active" : "testDiv"
-      })
-    },
-    onDestroyed: () => {
-      unsubscribe("main_creatingEmitter", "creatingEmitter")
-    },
-  })
-)
+subscribe("main_creatingEmitter", "creatingEmitter", (newVal) => {
+  if (newVal) return document.body.classList.add("creatingEmitter")
+  document.body.classList.remove("creatingEmitter")
+})
 
 console.log("norm: (0, 0)", normalize(new Vec2(0, 0)))
 console.log(
@@ -58,8 +37,7 @@ loadState(main)
     inputs[btn == 0 ? "m0" : "m1"] = val
   }
 
-  canvas.addEventListener("mousedown", (event) => {
-    toggleMouseInput(event.button, true)
+  canvas.addEventListener("click", () => {
     if (state.creatingEmitter) {
       setState((state) => {
         return {
@@ -68,10 +46,13 @@ loadState(main)
             ...state.emitters,
             new Emitter(inputs.mPos.copy(), new Vec2(), 500),
           ],
-          creatingEmitter: false,
         }
       })
     }
+  })
+
+  canvas.addEventListener("mousedown", (event) => {
+    toggleMouseInput(event.button, true)
   })
   canvas.addEventListener("mouseup", (event) => {
     toggleMouseInput(event.button, false)

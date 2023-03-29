@@ -13,12 +13,14 @@ export type WatchedElementRef = {
 export type ElementEventProps<T> = {
   onCreated?: { (el: T): void }
   onChange?: { (el: T): void }
+  onClick?: { (el: T): void }
   onDestroyed?: { (el: T): void }
 }
 
 export type GenericEventProps = {
   onCreated?: { (el: HTMLElement): void }
   onChange?: { (el: HTMLElement): void }
+  onClick?: { (el: HTMLElement): void }
   onDestroyed?: { (el: HTMLElement): void }
 }
 
@@ -69,13 +71,20 @@ export class Rendr {
     tag: string,
     props: ElementProps<T> = {}
   ): T {
-    const { htmlFor, children, onCreated, onChange, onDestroyed, ...rest } =
-      props
+    const {
+      htmlFor,
+      children,
+      onCreated,
+      onChange,
+      onClick,
+      onDestroyed,
+      ...rest
+    } = props
     const el = Object.assign(document.createElement(tag), rest) as T
     if (onChange) el.onchange = () => onChange(el)
+    if (onClick) el.onclick = () => onClick(el)
     if (children) el.append(...children)
     if (htmlFor && "htmlFor" in el) el.htmlFor = htmlFor
-    if (onCreated) onCreated(el)
     if (onDestroyed) {
       elementSubscriptions.push({
         element: el,
@@ -84,6 +93,7 @@ export class Rendr {
         },
       })
     }
+    if (onCreated) onCreated(el)
     return el
   }
 
@@ -119,7 +129,14 @@ export class Rendr {
   static div(className?: string, children?: HTMLElement[]): HTMLDivElement {
     return Rendr.element("div", { className, children })
   }
-  static button(innerText: string, onclick: { (): any }): HTMLButtonElement {
-    return Rendr.element("button", { type: "button", innerText, onclick })
+  static button(
+    innerText: string,
+    eventHandlers: ElementEventProps<HTMLButtonElement> = {}
+  ): HTMLButtonElement {
+    return Rendr.element("button", {
+      type: "button",
+      innerText,
+      ...eventHandlers,
+    })
   }
 }
