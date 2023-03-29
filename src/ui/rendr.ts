@@ -1,25 +1,35 @@
+import { subscribe, unsubscribe } from "../state"
+
 export type EventHandlerRef = {
   element: HTMLElement
   callback: { (e: Event): any }
 }
-export type ElementProps<T> = {
-  htmlFor?: string
-  children?: HTMLElement[]
-  onCreated?: { (el: T): void }
-  [key: string]: any
+
+export type WatchedElementRef = {
+  element: HTMLElement
+  onDestroyed: { (): void }
 }
 
 export type ElementEventProps<T> = {
   onCreated?: { (el: T): void }
   onChange?: { (el: T): void }
+  onDestroyed?: { (el: T): void }
 }
 
 export type GenericEventProps = {
   onCreated?: { (el: HTMLElement): void }
   onChange?: { (el: HTMLElement): void }
+  onDestroyed?: { (el: HTMLElement): void }
+}
+
+export type ElementProps<T> = (ElementEventProps<T> | GenericEventProps) & {
+  htmlFor?: string
+  children?: HTMLElement[]
+  [key: string]: any
 }
 
 const eventHandlerRefs: EventHandlerRef[] = []
+const elementSubscriptions: WatchedElementRef[] = []
 
 export class Rendr {
   static getInputType(val: any): string {
@@ -59,12 +69,21 @@ export class Rendr {
     tag: string,
     props: ElementProps<T> = {}
   ): T {
-    const { htmlFor, children, onCreated, onChange, ...rest } = props
+    const { htmlFor, children, onCreated, onChange, onDestroyed, ...rest } =
+      props
     const el = Object.assign(document.createElement(tag), rest) as T
     if (onChange) el.onchange = () => onChange(el)
     if (children) el.append(...children)
     if (htmlFor && "htmlFor" in el) el.htmlFor = htmlFor
     if (onCreated) onCreated(el)
+    if (onDestroyed) {
+      elementSubscriptions.push({
+        element: el,
+        onDestroyed: () => {
+          onDestroyed(el)
+        },
+      })
+    }
     return el
   }
 

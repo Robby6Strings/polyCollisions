@@ -17,7 +17,10 @@ export const defaultOptions = {
   prefab: getPrefabs(),
 }
 
-export const state = {
+export type observerCallback = { (newValue: any): any }
+const stateObservers: Map<string, Map<string, observerCallback>> = new Map()
+
+const _state = {
   loopRef: -1,
   polygons: [] as Polygon[],
   emitters: [] as Emitter[],
@@ -26,12 +29,50 @@ export const state = {
   creatingEmitter: false,
 }
 
+export const state = new Proxy(_state, {
+  set: function (target, prop, value) {
+    try {
+      if (state[prop as stateKey] !== value) {
+        const keyObservers = stateObservers.get(prop as stateKey)
+        keyObservers?.forEach((callback) => callback(value))
+      }
+    } catch (error) {
+      console.error(error)
+    }
+    return Reflect.set(target, prop, value)
+  },
+})
+
+export const subscribe = (
+  originKey: string,
+  stateKey: keyof typeof state,
+  callback: observerCallback
+) => {
+  const keyObservers = stateObservers.get(stateKey)
+  if (keyObservers) {
+    keyObservers.set(originKey, callback)
+    return
+  }
+  const newMap: Map<string, observerCallback> = new Map()
+  newMap.set(originKey, callback)
+  stateObservers.set(stateKey, newMap)
+}
+
+export const unsubscribe = (
+  originKey: string,
+  stateKey: keyof typeof state
+) => {
+  const keyObservers = stateObservers.get(stateKey)
+  if (!keyObservers) return
+  keyObservers.delete(originKey)
+}
+
 export const setState = (val: { (s: typeof state): typeof state }) => {
   Object.assign(state, val(state))
 }
 
 export type optionKey = keyof typeof defaultOptions
-export type stateKey = "prefab"
+export type stateKey = "prefab" | "creatingEmitter"
 
 export const optionGroups = {
   Rendering: [
