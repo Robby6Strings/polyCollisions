@@ -14,6 +14,11 @@ export type ElementEventProps<T> = {
   onChange?: { (el: T): void }
 }
 
+export type GenericEventProps = {
+  onCreated?: { (el: HTMLElement): void }
+  onChange?: { (el: HTMLElement): void }
+}
+
 const eventHandlerRefs: EventHandlerRef[] = []
 
 export class Rendr {

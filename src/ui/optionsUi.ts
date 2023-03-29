@@ -1,5 +1,5 @@
-import { Rendr } from "./rendr"
-import { strToPrefab } from "../prefab"
+import { ElementEventProps, GenericEventProps, Rendr } from "./rendr"
+import { Prefab, strToPrefab } from "../prefab"
 import {
   updatePolygons,
   saveState,
@@ -19,49 +19,66 @@ let optsBox: HTMLElement | null
 
 const { element, div, button, select, input, resetEventHandlers } = Rendr
 
-function createOptionGroup(groupName: string, optionKeys: optionKey[]) {
+function createOptionGroup(
+  groupName: string,
+  optionKeys: optionKey[],
+  events: GenericEventProps = {}
+) {
   return div("option-group", [
     element("h5", { innerText: groupName }),
     element("hr"),
     div(
       "option-group-items",
-      optionKeys.map((optionKey) => createOption(optionKey))
+      optionKeys.map((optionKey) =>
+        createOption(optionKey, state.options[optionKey], events)
+      )
     ),
   ])
 }
 
-function createOption(optionKey: optionKey): HTMLElement {
-  const val = state.options[optionKey]
+function createOption(
+  key: optionKey,
+  val: number | boolean | Prefab[],
+  events: GenericEventProps = {}
+): HTMLElement {
+  const onChange = events.onChange
+    ? events.onChange
+    : (el: HTMLElement) => {
+        Object.assign(state.options, {
+          [key]: Array.isArray(val)
+            ? (el as HTMLSelectElement).value
+            : typeof val === "boolean"
+            ? (el as HTMLInputElement).checked
+            : parseFloat((el as HTMLInputElement).value),
+        })
+      }
+
+  const onCreated = events.onCreated
+    ? events.onCreated
+    : (el: HTMLElement) => {
+        const type = Rendr.getInputType(val)
+        if (type === "number") {
+          const defaultVal = defaultOptions[key]
+          el.setAttribute(
+            "step",
+            defaultVal.toString().indexOf(".") > -1 ? "0.1" : "1"
+          )
+        }
+      }
+
   return div("option", [
     element("label", {
-      innerText: optionKey,
-      htmlFor: optionKey,
+      innerText: key,
+      htmlFor: key,
     }),
     Array.isArray(val)
-      ? select(optionKey, val, {
-          onChange: (el) => {
-            Object.assign(state.options, {
-              [optionKey]: el.value,
-            })
-          },
+      ? select(key, val, {
+          onChange,
+          onCreated,
         })
-      : input(optionKey, val, {
-          onChange: (el) => {
-            Object.assign(state.options, {
-              [optionKey]:
-                typeof val === "boolean" ? el.checked : parseFloat(el.value),
-            })
-          },
-          onCreated: (el) => {
-            const type = Rendr.getInputType(val)
-            if (type === "number") {
-              const defaultVal = defaultOptions[optionKey]
-              el.setAttribute(
-                "step",
-                defaultVal.toString().indexOf(".") > -1 ? "0.1" : "1"
-              )
-            }
-          },
+      : input(key, val, {
+          onChange,
+          onCreated,
         }),
   ])
 }
@@ -85,28 +102,20 @@ export function setupOptionsUI(loopFn: { (): void }) {
       ),
       div("option-group", [
         div("option-group-items", [
-          div("option", [
-            element("label", { innerText: "Prefab" }),
-            select("prefab", state.options.prefab, {
-              onCreated: (el: HTMLSelectElement) => {
-                el.value = state.prefab
-              },
-              onChange: (el) => {
-                updatePolygons(() => [])
-                loadPrefab(strToPrefab(el.value))
-              },
-            }),
-          ]),
-          div("option", [
-            element("label", { innerText: "fps" }),
-            input("fps", state.options.fps, {
-              onChange: (el) => {
-                state.options.fps = parseInt(el.value)
-                clearInterval(state.loopRef)
-                setLoopRef(setInterval(loopFn, 1000 / state.options.fps))
-              },
-            }),
-          ]),
+          createOption("prefab", state.options.prefab, {
+            onCreated: (el) => ((el as HTMLSelectElement).value = state.prefab),
+            onChange: (el) => {
+              updatePolygons(() => [])
+              loadPrefab(strToPrefab((el as HTMLSelectElement).value))
+            },
+          }),
+          createOption("fps", state.options.fps, {
+            onChange: (el) => {
+              state.options.fps = parseInt((el as HTMLInputElement).value)
+              clearInterval(state.loopRef)
+              setLoopRef(setInterval(loopFn, 1000 / state.options.fps))
+            },
+          }),
         ]),
       ]),
 
