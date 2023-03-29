@@ -53,8 +53,9 @@ export type stateKey = "prefab" | "creatingEmitter"
 export const state = new Proxy(_state, {
   set: function (target, prop, value) {
     if (state[prop as stateKey] !== value) {
-      const keyObservers = stateObservers.get(prop as stateKey)
-      keyObservers?.forEach((callback) => callback(value))
+      stateObservers
+        .get(prop as stateKey)
+        ?.forEach((callback) => callback(value))
     }
     return Reflect.set(target, prop, value)
   },
