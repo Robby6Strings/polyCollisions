@@ -1,5 +1,6 @@
 import { setupOptionsUI } from "./html"
 import {
+  deleteState,
   loadState,
   reloadPrefab,
   resetOptions,
@@ -33,4 +34,5 @@ export const keyMap: Map<string, (loopFn: { (): void }) => void> = new Map([
       setupOptionsUI(loopFn)
     },
   ],
+  ["d", () => deleteState()],
 ])

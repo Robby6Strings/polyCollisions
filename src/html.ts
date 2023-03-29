@@ -10,6 +10,8 @@ import {
   optionKey,
   resetOptions,
   reloadPrefab,
+  defaultOptions,
+  deleteState,
 } from "./state"
 
 let optsBox: HTMLElement | null
@@ -48,6 +50,8 @@ function createOptionGroup(groupName: string, optionKeys: optionKey[]) {
 }
 function createOptionElement(optionKey: optionKey): HTMLElement {
   const val: any = state.options[optionKey]
+  const defaultVal = defaultOptions[optionKey]
+
   let el: HTMLElement
   const wrapperEl = document.createElement("div")
   wrapperEl.className = "option"
@@ -72,17 +76,22 @@ function createOptionElement(optionKey: optionKey): HTMLElement {
     el = Object.assign(document.createElement("input"), {
       type,
       id: optionKey,
-      [typeof val === "boolean" ? "checked" : "value"]: val,
+      [typeof defaultVal === "boolean" ? "checked" : "value"]: val,
       onchange: () => {
         Object.assign(state.options, {
           [optionKey]:
-            typeof val === "boolean"
+            typeof defaultVal === "boolean"
               ? (el as HTMLInputElement).checked
-              : (el as HTMLInputElement).value,
+              : parseFloat((el as HTMLInputElement).value),
         })
       },
     })
-    if (type === "number") el.setAttribute("step", "0.1")
+    if (type === "number") {
+      el.setAttribute(
+        "step",
+        defaultVal.toString().indexOf(".") > -1 ? "0.1" : "1"
+      )
+    }
   }
 
   const lbl = document.createElement("label")
@@ -164,6 +173,13 @@ export function setupOptionsUI(loopFn: { (): void }) {
       innerText: "Load State [L]",
       onclick: () => {
         loadState(loopFn)
+      },
+    }),
+    Object.assign(document.createElement("button"), {
+      type: "button",
+      innerText: "Delete Save [D]",
+      onclick: () => {
+        deleteState()
       },
     })
   )

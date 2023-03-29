@@ -2,7 +2,7 @@ import { setupOptionsUI } from "./html"
 import { Polygon, IPolygon } from "./polygon"
 import { getPrefabCreator, getPrefabs, Prefab } from "./prefab"
 
-const defaultOptions = {
+export const defaultOptions = {
   renderQuadTree: false,
   renderPolyBounds: true,
   renderPolyData: true,
@@ -10,7 +10,7 @@ const defaultOptions = {
   randomizeNumVertices: false,
   gravity: 0.7,
   maxPolyVertices: 6,
-  strokeWidth: 1.5,
+  strokeWidth: 2,
   polySize: 20,
   fps: 60,
   prefab: getPrefabs(),
@@ -55,6 +55,10 @@ export const saveState = () => {
   }
   localStorage.setItem("polySandbox", JSON.stringify(serialized))
 }
+export const deleteState = () => {
+  localStorage.removeItem("polySandbox")
+  loadPrefab(Prefab.Default)
+}
 
 export const loadState = (loopFn: { (): void }) => {
   let data = localStorage.getItem("polySandbox")
@@ -74,12 +78,11 @@ export const loadState = (loopFn: { (): void }) => {
         state.options = parsed.options
       }
     } catch (error) {
-      localStorage.removeItem("polySandbox")
       console.log("loadState error - localStorage has been cleared.", {
         error,
         data,
       })
-      loadPrefab(Prefab.Default)
+      deleteState()
     }
   } else {
     loadPrefab(Prefab.Default)

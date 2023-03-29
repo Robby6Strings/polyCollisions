@@ -75,16 +75,16 @@ function main() {
 
 function update() {
   //cull offscreen polygons
-  updatePolygons((items: Polygon[]) => {
-    return items.filter((s: Polygon) => {
-      return (
-        s.position.x < window.innerWidth + 100 &&
-        s.position.x > -100 &&
-        s.position.y < window.innerHeight + 100 &&
-        s.position.y > -100
-      )
-    })
-  })
+  // updatePolygons((items: Polygon[]) => {
+  //   return items.filter((s: Polygon) => {
+  //     return (
+  //       s.position.x < window.innerWidth + 100 &&
+  //       s.position.x > -100 &&
+  //       s.position.y < window.innerHeight + 100 &&
+  //       s.position.y > -100
+  //     )
+  //   })
+  // })
 
   updatePhysics()
   handleCollisions_QuadTree()
@@ -93,6 +93,7 @@ function updatePhysics() {
   for (let i = 0; i < state.polygons.length; i++) {
     const poly = state.polygons[i]
     poly.isColliding = false
+
     if (!poly.isStatic) {
       poly.rotateBy(poly.angularVelocity)
 
@@ -109,6 +110,7 @@ function updatePhysics() {
       }
 
       poly.velocity.y += state.options.gravity // gravity
+
       poly.velocity = poly.velocity.multiply(0.935) // friction
       poly.angularVelocity = poly.angularVelocity * 0.4
       poly.position = poly.position.add(poly.velocity)
