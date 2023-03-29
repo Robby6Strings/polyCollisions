@@ -1,4 +1,4 @@
-import { setupOptionsUI } from "./html"
+import { setupOptionsUI } from "./optionsUi"
 import { Polygon, IPolygon } from "./polygon"
 import { getPrefabCreator, getPrefabs, Prefab } from "./prefab"
 
@@ -34,8 +34,8 @@ export const optionGroups = {
     "renderPolyBackgrounds",
     "strokeWidth",
   ],
-  Polygons: ["maxPolyVertices", "polySize", "prefab", "randomizeNumVertices"],
-  Physics: ["gravity", "fps"],
+  Polygons: ["maxPolyVertices", "polySize", "randomizeNumVertices"],
+  Physics: ["gravity"],
 }
 
 export const setLoopRef = (num: number) => (state.loopRef = num)
@@ -103,5 +103,3 @@ export const reloadPrefab = () => {
   updatePolygons(() => [])
   state.polygons = getPrefabCreator(state.prefab)()
 }
-
-//setupOptionsUI()

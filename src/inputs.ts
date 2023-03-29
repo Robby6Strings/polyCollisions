@@ -1,4 +1,4 @@
-import { setupOptionsUI } from "./html"
+import { setupOptionsUI } from "./optionsUi"
 import {
   deleteState,
   loadState,
