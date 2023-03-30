@@ -36,7 +36,12 @@ const buttons = (loopFn: { (): void }) => {
     button("Delete Save [D]", { onClick: () => deleteState() }),
     button("Create Emitter [E]", {
       id: generateUUID(),
-      className: appState.state.creatingEmitter ? "active" : "",
+      computedProps: (props: Rendr.ElementProps<HTMLButtonElement>) =>
+        Object.assign(
+          { className: appState.state.creatingEmitter ? "active" : "" },
+          props
+        ),
+
       onClick: () => {
         appState.update(({ creatingEmitter }) => ({
           creatingEmitter: !creatingEmitter,
@@ -49,15 +54,22 @@ const buttons = (loopFn: { (): void }) => {
       },
       onDestroyed: ({ id }) => appState.unsubscribe(id, "creatingEmitter"),
     }),
+
     element("div", {
-      innerText: appState.state.creatingEmitter,
       id: generateUUID(),
-      onCreated: (el, elCreator) => {
-        Rendr.resetElementSubscriptions(el)
-        appState.subscribe(el.id, "creatingEmitter", (newVal) => {
-          el.replaceWith(elCreator({ innerText: newVal, id: el.id }))
-        })
-      },
+      computedProps: (props: Rendr.ElementProps<HTMLDivElement>) =>
+        Object.assign({ innerText: appState.state.creatingEmitter }, props),
+
+      onCreated: (el, createEl) =>
+        appState.subscribe(el.id, "creatingEmitter", (newVal: boolean) =>
+          el.replaceWith(
+            createEl({
+              innerText: newVal,
+              children: newVal ? [element("p", { innerText: "child" })] : [],
+            })
+          )
+        ),
+
       onDestroyed: ({ id }) => appState.unsubscribe(id, "creatingEmitter"),
     }),
   ])

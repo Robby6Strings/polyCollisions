@@ -4,7 +4,7 @@ import { Rendr } from "../../lib/rendr"
 export const optionGroup = (
   groupName: string,
   optionKeys: string[],
-  events: Rendr.ElementEventProps<HTMLElement> = {}
+  events: Rendr.ElementEventProps<HTMLSelectElement | HTMLInputElement> = {}
 ) => {
   return Rendr.div("option-group", [
     Rendr.element("h5", { innerText: groupName }),
@@ -44,19 +44,6 @@ export const option = (
         }))
       }
 
-  const onCreated = events.onCreated
-    ? events.onCreated
-    : (el: HTMLSelectElement | HTMLInputElement, _: any) => {
-        const type = Rendr.getInputType(val)
-        if (type === "number") {
-          const defaultVal = defaultOptions[key as keyof typeof defaultOptions]
-          el.setAttribute(
-            "step",
-            defaultVal.toString().indexOf(".") > -1 ? "0.1" : "1"
-          )
-        }
-      }
-
   return Rendr.div("option", [
     Rendr.element("label", {
       innerText: key,
@@ -65,11 +52,21 @@ export const option = (
     Array.isArray(val)
       ? Rendr.select(key, val, {
           onChange,
-          onCreated,
+          onCreated: () => {},
         })
       : Rendr.input(key, val, {
           onChange,
-          onCreated,
+          onCreated: (el: HTMLInputElement) => {
+            const type = Rendr.getInputType(val)
+            if (type === "number") {
+              const defaultVal =
+                defaultOptions[key as keyof typeof defaultOptions]
+              el.setAttribute(
+                "step",
+                defaultVal.toString().indexOf(".") > -1 ? "0.1" : "1"
+              )
+            }
+          },
         }),
   ])
 }

@@ -7,6 +7,7 @@ import { loadState, appState } from "./appState"
 import { normalize } from "./lib/math"
 import { Vec2 } from "./lib/vec"
 import { Emitter } from "./lib/emitter"
+//import { StateObserver } from "./lib/state"
 const canvas = document.createElement("canvas")
 canvas.width = window.innerWidth
 canvas.height = window.innerHeight

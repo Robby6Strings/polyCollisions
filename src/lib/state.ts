@@ -1,5 +1,3 @@
-import { generateUUID } from "./math"
-
 export type observerCallback = { (newValue: any): any }
 export type observerMap = Map<string, Map<string, observerCallback>>
 
@@ -33,12 +31,11 @@ export class StateObserver<T extends Object> implements IStateObserver {
     const keyObserver = this.observers.get(stateKey as string)
     if (keyObserver) {
       keyObserver.set(originKey, callback)
-      return originKey
+      return
     }
     const newMap: Map<string, observerCallback> = new Map()
     newMap.set(originKey, callback)
     this.observers.set(stateKey as string, newMap)
-    return originKey
   }
   unsubscribe(originKey: string, stateKey: keyof T) {
     const keyObservers = this.observers.get(stateKey as string)

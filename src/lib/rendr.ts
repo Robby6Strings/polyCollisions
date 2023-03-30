@@ -1,3 +1,5 @@
+import { generateUUID } from "./math"
+
 export namespace Rendr {
   const eventHandlerRefs: EventHandlerRef[] = []
   let elementSubscriptions: WatchedElementRef[] = []
@@ -13,18 +15,18 @@ export namespace Rendr {
   }
 
   export type ElementEventProps<T> = {
-    onCreated?: {
-      (el: T, creator: { (newProps: ElementProps<T>): T }): void
-    }
+    onCreated?: { (el: T, creator: { (props?: ElementProps<T>): T }): void }
     onChange?: { (el: T): void }
     onClick?: { (el: T): void }
     onDestroyed?: { (el: T): void }
   }
 
   export type ElementProps<T> = ElementEventProps<T> & {
+    id?: string
     className?: string
     htmlFor?: string
     children?: HTMLElement[]
+    computedProps?: { (props: Rendr.ElementProps<T>): Rendr.ElementProps<T> }
     [key: string]: any
   }
 
@@ -37,7 +39,9 @@ export namespace Rendr {
       case "string":
         return "text"
     }
-    throw new Error("unable to get input type for val with type: " + typeof val)
+    throw new Error(
+      "unable to get input type for val with type: " + typeof val + " - " + val
+    )
   }
 
   export function registerEventHandler<T extends HTMLElement>(
@@ -93,10 +97,15 @@ export namespace Rendr {
       onChange,
       onClick,
       onDestroyed,
+      computedProps,
       ...rest
     } = props
 
-    const element = Object.assign(document.createElement(tag), rest) as T
+    const element = Object.assign(
+      document.createElement(tag),
+      computedProps ? computedProps(rest) : rest
+    ) as T
+    element.id = props.id ?? generateUUID()
 
     if (onChange) element.onchange = () => onChange(element)
     if (onClick) element.onclick = () => onClick(element)
@@ -105,7 +114,13 @@ export namespace Rendr {
 
     if (onCreated) {
       onCreated(element, (newProps: ElementProps<T> = {}) => {
-        return Rendr.element(element.tagName, Object.assign(props, newProps))
+        console.log("onCreated", { newProps })
+        return Rendr.element(
+          element.tagName,
+          Object.keys(newProps).length
+            ? Object.assign(props, { ...newProps })
+            : props
+        )
       })
     }
     if (onDestroyed) {
