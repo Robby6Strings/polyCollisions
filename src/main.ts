@@ -1,20 +1,20 @@
 import "./style.css"
-import { SAT } from "./collisions"
-import { createPolygon, Polygon } from "./polygon"
+import { SAT } from "./lib/SAT"
+import { createPolygon, Polygon } from "./lib/polygon"
 import { keyMap, inputs } from "./inputs"
-import { quadTree, TypedRectangle } from "./quadTree"
-import { loadState, setState, state, subscribe } from "./state"
-import { normalize } from "./math"
-import { Vec2 } from "./vec"
-import { Emitter } from "./emitter"
+import { quadTree } from "./lib/quadTree"
+import { loadState, appState } from "./appState"
+import { normalize } from "./lib/math"
+import { Vec2 } from "./lib/vec"
+import { Emitter } from "./lib/emitter"
 const canvas = document.createElement("canvas")
 canvas.width = window.innerWidth
 canvas.height = window.innerHeight
 document.body.appendChild(canvas)
 const ctx = canvas.getContext("2d")
 
-subscribe("main_creatingEmitter", "creatingEmitter", (newVal) => {
-  if (newVal) return document.body.classList.add("creatingEmitter")
+appState.subscribe("main_creatingEmitter", "creatingEmitter", (newVal) => {
+  if (!!newVal) return document.body.classList.add("creatingEmitter")
   document.body.classList.remove("creatingEmitter")
 })
 
@@ -38,8 +38,8 @@ loadState(main)
   }
 
   canvas.addEventListener("click", () => {
-    if (state.creatingEmitter) {
-      setState((state) => {
+    if (appState.state.creatingEmitter) {
+      appState.update((state) => {
         return {
           ...state,
           emitters: [
@@ -81,15 +81,15 @@ loadState(main)
 
 function main() {
   let newPolygons: Polygon[] = []
-  if (!state.creatingEmitter && inputs.m0) {
+  if (!appState.state.creatingEmitter && inputs.m0) {
     newPolygons.push(createPolygon())
   }
-  for (let i = 0; i < state.emitters.length; i++) {
-    const poly = state.emitters[i].update(state.options.fps)
+  for (let i = 0; i < appState.state.emitters.length; i++) {
+    const poly = appState.state.emitters[i].update(appState.state.options.fps)
     if (poly) newPolygons.push(poly)
   }
   if (newPolygons.length > 0) {
-    setState((state) => {
+    appState.update((state) => {
       return {
         ...state,
         polygons: [...state.polygons, ...newPolygons],
@@ -100,9 +100,9 @@ function main() {
   const frameStartTime = performance.now()
   update()
   quadTree.clear()
-  let len = state.polygons.length
+  let len = appState.state.polygons.length
   while (len--) {
-    quadTree.insert(state.polygons[len].quadTreeRect)
+    quadTree.insert(appState.state.polygons[len].quadTreeRect)
   }
   //const dt = Math.min(performance.now() - frameStartTime, 1000 / state.options.fps)
   //console.log(dt)
@@ -123,14 +123,14 @@ const cullOffscreen = (items: Polygon[]) => {
 function update() {
   updatePhysics()
   handleCollisions()
-  setState((state) => {
+  appState.update((state) => {
     return { ...state, polygons: cullOffscreen(state.polygons) }
   })
 }
 
 function updatePhysics() {
-  for (let i = 0; i < state.polygons.length; i++) {
-    const poly = state.polygons[i]
+  for (let i = 0; i < appState.state.polygons.length; i++) {
+    const poly = appState.state.polygons[i]
     poly.isColliding = false
 
     if (!poly.isStatic) {
@@ -148,7 +148,7 @@ function updatePhysics() {
         poly.velocity.y += Math.sin(gravAngle) * gravForce
       }
 
-      poly.velocity.y += state.options.gravity // gravity
+      poly.velocity.y += appState.state.options.gravity // gravity
 
       poly.velocity = poly.velocity.multiply(0.935) // friction
       poly.angularVelocity = poly.angularVelocity * 0.4
@@ -159,10 +159,10 @@ function updatePhysics() {
   }
 }
 function handleCollisions() {
-  for (let i = 0; i < state.polygons.length; i++) {
-    const a = state.polygons[i]
-    for (let j = 0; j < state.polygons.length; j++) {
-      const b = state.polygons[j]
+  for (let i = 0; i < appState.state.polygons.length; i++) {
+    const a = appState.state.polygons[i]
+    for (let j = 0; j < appState.state.polygons.length; j++) {
+      const b = appState.state.polygons[j]
 
       if (a == b) continue
 
@@ -175,48 +175,48 @@ function handleCollisions() {
     }
   }
 }
-function handleCollisions_QuadTree() {
-  for (let i = 0; i < state.polygons.length; i++) {
-    const a = state.polygons[i]
-    //if (a.isStatic) continue
-    const potentials: TypedRectangle<Polygon>[] = []
-    if (!quadTree.query(a.quadTreeRect, potentials)) continue
+// function handleCollisions_QuadTree() {
+//   for (let i = 0; i < appState.state.polygons.length; i++) {
+//     const a = appState.state.polygons[i]
+//     //if (a.isStatic) continue
+//     const potentials: TypedRectangle<Polygon>[] = []
+//     if (!quadTree.query(a.quadTreeRect, potentials)) continue
 
-    for (const { data: b } of potentials) {
-      if (b === a) continue
+//     for (const { data: b } of potentials) {
+//       if (b === a) continue
 
-      const collision = SAT.checkCollision(a, b)
-      if (collision) {
-        a.isColliding = true
-        b.isColliding = true
-        if (collision) SAT.resolveCollision(collision)
-      }
-    }
-  }
-}
+//       const collision = SAT.checkCollision(a, b)
+//       if (collision) {
+//         a.isColliding = true
+//         b.isColliding = true
+//         if (collision) SAT.resolveCollision(collision)
+//       }
+//     }
+//   }
+// }
 
 function render(dt: number) {
   if (!ctx) return
   const renderStartTime = performance.now()
   ctx.clearRect(0, 0, canvas.width, canvas.height)
 
-  for (let i = 0; i < state.emitters.length; i++) {
-    state.emitters[i].render(ctx)
+  for (let i = 0; i < appState.state.emitters.length; i++) {
+    appState.state.emitters[i].render(ctx)
   }
 
-  for (let i = 0; i < state.polygons.length; i++) {
-    const poly = state.polygons[i]
+  for (let i = 0; i < appState.state.polygons.length; i++) {
+    const poly = appState.state.polygons[i]
     poly.render(ctx)
-    if (state.options.renderPolyBounds && poly.vertices.length !== 4)
+    if (appState.state.options.renderPolyBounds && poly.vertices.length !== 4)
       poly.renderBounds(ctx)
   }
 
-  if (state.options.renderQuadTree) quadTree.render(ctx)
+  if (appState.state.options.renderQuadTree) quadTree.render(ctx)
 
   const { innerWidth: w, innerHeight: h } = window
 
   ctx.fillStyle = "orange"
-  ctx.fillText(`${state.polygons.length} polygons`, w - 80, h - 45)
+  ctx.fillText(`${appState.state.polygons.length} polygons`, w - 80, h - 45)
   ctx.fillText(`update: ${dt}ms`, w - 80, h - 30)
   ctx.fillText(
     `render: ${performance.now() - renderStartTime}ms`,

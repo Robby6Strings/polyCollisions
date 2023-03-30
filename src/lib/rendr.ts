@@ -1,41 +1,41 @@
-import { generateUUID } from "../math"
-import { stateKey, subscribe, unsubscribe } from "../state"
+import { generateUUID } from "./math"
+import { IState } from "./state"
 
-export type EventHandlerRef = {
-  element: HTMLElement
-  callback: { (e: Event): any }
-}
+export namespace Rendr {
+  const eventHandlerRefs: EventHandlerRef[] = []
+  const elementSubscriptions: WatchedElementRef[] = []
 
-export type WatchedElementRef = {
-  element: HTMLElement
-  onDestroyed: { (): void }
-}
+  type ReactivityConfig = {
+    state: IState
+    property: string
+    callback: { (el: HTMLElement, newVal: any): void }
+  }
 
-export type ElementEventProps<T> = {
-  onCreated?: { (el: T): void }
-  onChange?: { (el: T): void }
-  onClick?: { (el: T): void }
-  onDestroyed?: { (el: T): void }
-}
+  type EventHandlerRef = {
+    element: HTMLElement
+    callback: { (e: Event): any }
+  }
 
-export type GenericEventProps = {
-  onCreated?: { (el: HTMLElement): void }
-  onChange?: { (el: HTMLElement): void }
-  onClick?: { (el: HTMLElement): void }
-  onDestroyed?: { (el: HTMLElement): void }
-}
+  type WatchedElementRef = {
+    element: HTMLElement
+    onDestroyed: { (): void }
+  }
 
-export type ElementProps<T> = (ElementEventProps<T> | GenericEventProps) & {
-  htmlFor?: string
-  children?: HTMLElement[]
-  [key: string]: any
-}
+  export type ElementEventProps<T> = {
+    onCreated?: { (el: T): void }
+    onChange?: { (el: T): void }
+    onClick?: { (el: T): void }
+    onDestroyed?: { (el: T): void }
+  }
 
-const eventHandlerRefs: EventHandlerRef[] = []
-const elementSubscriptions: WatchedElementRef[] = []
+  export type ElementProps<T> = ElementEventProps<T> & {
+    htmlFor?: string
+    children?: HTMLElement[]
+    watch?: ReactivityConfig
+    [key: string]: any
+  }
 
-export class Rendr {
-  static getInputType(val: any): string {
+  export function getInputType(val: any): string {
     switch (typeof val) {
       case "boolean":
         return "checkbox"
@@ -46,7 +46,8 @@ export class Rendr {
     }
     throw new Error("unable to get input type for val with type: " + typeof val)
   }
-  static registerEventHandler<T extends HTMLElement>(
+
+  export function registerEventHandler<T extends HTMLElement>(
     querySelector: string,
     callback: { (e: Event): void }
   ) {
@@ -61,20 +62,21 @@ export class Rendr {
       callback,
     })
   }
-  static resetEventHandlers() {
+
+  export function resetEventHandlers() {
     while (eventHandlerRefs.length > 0) {
       const item = eventHandlerRefs.pop()
       item?.element.removeEventListener("change", item.callback)
     }
   }
 
-  static resetElementSubscriptions() {
+  export function resetElementSubscriptions() {
     while (elementSubscriptions.length > 0) {
       elementSubscriptions.pop()?.onDestroyed()
     }
   }
 
-  static element<T extends HTMLElement>(
+  export function element<T extends HTMLElement>(
     tag: string,
     props: ElementProps<T> = {}
   ): T {
@@ -85,6 +87,7 @@ export class Rendr {
       onChange,
       onClick,
       onDestroyed,
+      watch,
       ...rest
     } = props
     const el = Object.assign(document.createElement(tag), rest) as T
@@ -101,18 +104,26 @@ export class Rendr {
       })
     }
     if (onCreated) onCreated(el)
+    if (watch) return reactiveElement(el, watch)
     return el
   }
 
-  static select(
+  export function div(
+    className?: string,
+    children?: HTMLElement[]
+  ): HTMLDivElement {
+    return element<HTMLDivElement>("div", { className, children })
+  }
+
+  export function select(
     id: string,
     val: string[],
-    eventHandlers: ElementEventProps<HTMLSelectElement> = {}
+    eventHandlers: ElementProps<HTMLSelectElement> = {}
   ): HTMLSelectElement {
-    return Rendr.element<HTMLSelectElement>("select", {
+    return element<HTMLSelectElement>("select", {
       id,
       children: val.map((item: string) =>
-        Rendr.element("option", {
+        element("option", {
           value: item,
           text: item,
         })
@@ -120,47 +131,42 @@ export class Rendr {
       ...eventHandlers,
     })
   }
-  static input(
+  export function input(
     id: string,
     val: boolean | number,
-    eventHandlers: ElementEventProps<HTMLInputElement> = {}
+    eventHandlers: ElementProps<HTMLInputElement> = {}
   ): HTMLInputElement {
-    const type = Rendr.getInputType(val)
-    return Rendr.element<HTMLInputElement>("input", {
+    const type = getInputType(val)
+    return element<HTMLInputElement>("input", {
       id,
       type,
       [typeof val === "boolean" ? "checked" : "value"]: val,
       ...eventHandlers,
     })
   }
-  static div(className?: string, children?: HTMLElement[]): HTMLDivElement {
-    return Rendr.element("div", { className, children })
-  }
-  static button(
+  export function button(
     innerText: string,
-    eventHandlers: ElementEventProps<HTMLButtonElement> = {}
+    eventHandlers: ElementProps<HTMLButtonElement> = {}
   ): HTMLButtonElement {
-    return Rendr.element("button", {
+    return element("button", {
       type: "button",
       innerText,
       ...eventHandlers,
     })
   }
-  static reactiveElement(
-    el: HTMLElement,
-    stateKey: stateKey,
-    subscriptionCallback: { (el: HTMLElement, newVal: any): void }
-  ): HTMLElement {
+  function reactiveElement<T extends HTMLElement>(
+    el: T,
+    config: ReactivityConfig
+  ): T {
     const originKey = generateUUID()
-
-    subscribe(originKey, stateKey, (newVal) => {
-      subscriptionCallback(el, newVal)
+    config.state.subscribe(originKey, config.property, (newVal) => {
+      config.callback(el, newVal)
     })
 
     elementSubscriptions.push({
       element: el,
       onDestroyed: () => {
-        unsubscribe(originKey, stateKey)
+        config.state.unsubscribe(originKey, config.property)
       },
     })
     return el

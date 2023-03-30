@@ -1,8 +1,8 @@
 import { Emitter } from "./emitter"
 import { Polygon } from "./polygon"
-import { createBucketPrefab } from "./prefabs/bucketPrefab"
-import { createDefaultPrefab } from "./prefabs/defaultPrefab"
-import { createTestPrefab } from "./prefabs/testPrefab"
+import { createBucketPrefab } from "../prefabs/bucketPrefab"
+import { createDefaultPrefab } from "../prefabs/defaultPrefab"
+import { createTestPrefab } from "../prefabs/testPrefab"
 
 export interface IPrefab {
   polygons: Polygon[]

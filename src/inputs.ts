@@ -1,13 +1,13 @@
-import { setupOptionsUI } from "./ui/optionsUi"
+import { setupOptionsUI } from "./optionsUi"
 import {
   deleteState,
   loadState,
   reloadPrefab,
   resetOptions,
   saveState,
-  setState,
-} from "./state"
-import { Vec2 } from "./vec"
+  appState,
+} from "./appState"
+import { Vec2 } from "./lib/vec"
 
 export const inputs = {
   m0: false,
@@ -32,7 +32,7 @@ export const keyMap: keyMap = new Map([
   [
     "e",
     () => {
-      setState((s) => {
+      appState.update((s) => {
         return { ...s, creatingEmitter: !s.creatingEmitter }
       })
     },
@@ -40,7 +40,7 @@ export const keyMap: keyMap = new Map([
   [
     "c",
     () => {
-      setState((s) => {
+      appState.update((s) => {
         return { ...s, polygons: [] }
       })
     },

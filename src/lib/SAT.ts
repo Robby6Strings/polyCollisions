@@ -1,36 +1,39 @@
 import { Polygon } from "./polygon"
 import { Vec2 } from "./vec"
 
-export interface Collision {
-  a: Polygon
-  b: Polygon
-  mtv: Vec2
-}
-
-export type CollisionResult = Collision | null
-
-export class Projection {
-  constructor(public min: number, public max: number) {}
-
-  overlap(other: Projection): number {
-    return Math.min(this.max, other.max) - Math.max(this.min, other.min)
+export namespace SAT {
+  export interface Collision {
+    a: Polygon
+    b: Polygon
+    mtv: Vec2
   }
-}
 
-export class SAT {
-  static checkCollision(a: Polygon, b: Polygon): CollisionResult {
+  export type CollisionResult = Collision | null
+
+  export class Projection {
+    constructor(public min: number, public max: number) {}
+
+    overlap(other: Projection): number {
+      return Math.min(this.max, other.max) - Math.max(this.min, other.min)
+    }
+  }
+
+  export function checkCollision(a: Polygon, b: Polygon): CollisionResult {
     if (
       a.boundingBox.minX <= b.boundingBox.maxX &&
       a.boundingBox.maxX >= b.boundingBox.minX &&
       a.boundingBox.minY <= b.boundingBox.maxY &&
       a.boundingBox.maxY >= b.boundingBox.minY
     ) {
-      return SAT.narrowPhaseCollision(a, b)
+      return narrowPhaseCollision(a, b)
     }
     return null
   }
 
-  static narrowPhaseCollision(a: Polygon, b: Polygon): CollisionResult {
+  export function narrowPhaseCollision(
+    a: Polygon,
+    b: Polygon
+  ): CollisionResult {
     if (a.isStatic && b.isStatic) return null
     let mtv = new Vec2()
     let overlap = Number.MAX_VALUE
@@ -69,7 +72,7 @@ export class SAT {
     return { a, b, mtv }
   }
 
-  static resolveCollision(collision: Collision) {
+  export function resolveCollision(collision: Collision) {
     const { a, b, mtv } = collision
     if (a.isStatic && b.isStatic) return
 
@@ -100,7 +103,7 @@ export class SAT {
     }
   }
 
-  static resolveCollisionIterative(collision: Collision) {
+  export function resolveCollisionIterative(collision: Collision) {
     const { a, b, mtv } = collision
     if (a.isStatic && b.isStatic) return
 
@@ -115,7 +118,7 @@ export class SAT {
     const maxIterations = 100
     let iteration = 0
 
-    while (iteration < maxIterations && SAT.checkCollision(a, b)) {
+    while (iteration < maxIterations && checkCollision(a, b)) {
       d1 = d1.multiply(0.5)
       d2 = d2.multiply(0.5)
 

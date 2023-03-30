@@ -1,7 +1,7 @@
-import { Emitter } from "../emitter"
-import { Polygon } from "../polygon"
-import { IPrefab } from "../prefab"
-import { Vec2 } from "../vec"
+import { Emitter } from "../lib/emitter"
+import { Polygon } from "../lib/polygon"
+import { IPrefab } from "../lib/prefab"
+import { Vec2 } from "../lib/vec"
 
 export function createBucketPrefab(): IPrefab {
   const wallVertices: Array<Vec2> = [

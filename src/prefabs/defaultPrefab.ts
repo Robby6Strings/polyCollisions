@@ -1,6 +1,6 @@
-import { Polygon } from "../polygon"
-import { IPrefab } from "../prefab"
-import { Vec2 } from "../vec"
+import { Polygon } from "../lib/polygon"
+import { IPrefab } from "../lib/prefab"
+import { Vec2 } from "../lib/vec"
 
 export function createDefaultPrefab(): IPrefab {
   const floorVertices: Array<Vec2> = [

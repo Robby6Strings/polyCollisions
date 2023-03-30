@@ -1,8 +1,8 @@
-import { Projection } from "./collisions"
-import { inputs } from "./inputs"
+import { inputs } from "../inputs"
 import { IVec2, Vec2 } from "./vec"
-import { TypedRectangle as QuadTreeRect } from "./quadTree"
-import { state } from "./state"
+import { QuadTree } from "./quadTree"
+import { appState } from "../appState"
+import { SAT } from "./SAT"
 
 export interface BoundingBox {
   minX: number
@@ -29,13 +29,8 @@ export class Polygon implements IPolygon {
   public angularVelocity: number = 0
   private normals: Vec2[] = []
   private _transformedVertices: Vec2[] = []
-  public quadTreeRect: QuadTreeRect<Polygon> = new QuadTreeRect(
-    0,
-    0,
-    0,
-    0,
-    this
-  )
+  public quadTreeRect: QuadTree.TypedRectangle<Polygon> =
+    new QuadTree.TypedRectangle(0, 0, 0, 0, this)
   public boundingBox: BoundingBox = {
     minX: 0,
     maxX: 0,
@@ -60,7 +55,7 @@ export class Polygon implements IPolygon {
   render(ctx: CanvasRenderingContext2D): void {
     const vertices = this.getVertices()
 
-    if (state.options.renderPolyData) {
+    if (appState.state.options.renderPolyData) {
       ctx.fillStyle = "#777"
       ctx.fillText(
         `(${this.position.x.toFixed(2)}, ${this.position.y.toFixed(2)})`,
@@ -72,7 +67,7 @@ export class Polygon implements IPolygon {
     ctx.fillStyle = "#555"
 
     ctx.strokeStyle = this.isColliding ? "red" : "green"
-    ctx.lineWidth = state.options.strokeWidth
+    ctx.lineWidth = appState.state.options.strokeWidth
 
     ctx.beginPath()
     ctx.moveTo(vertices[0].x, vertices[0].y)
@@ -81,7 +76,7 @@ export class Polygon implements IPolygon {
     }
     ctx.closePath()
     ctx.stroke()
-    if (state.options.renderPolyBackgrounds) ctx.fill()
+    if (appState.state.options.renderPolyBackgrounds) ctx.fill()
     ctx.lineWidth = 1
   }
   renderBounds(ctx: CanvasRenderingContext2D): void {
@@ -95,7 +90,7 @@ export class Polygon implements IPolygon {
     ctx.stroke()
   }
 
-  project(normal: Vec2): Projection {
+  project(normal: Vec2): SAT.Projection {
     // Transform the normal into the polygon's local space
     const localNormal = normal.subtract(this.position).rotate(-this.rotation)
 
@@ -115,7 +110,7 @@ export class Polygon implements IPolygon {
         max = projection
       }
     }
-    return new Projection(min, max)
+    return new SAT.Projection(min, max)
   }
 
   public getEdges(): Vec2[] {
@@ -224,13 +219,15 @@ export function genPolygonVerts(n: number): Vec2[] {
 }
 
 export function createPolygon(pos?: Vec2, vel?: Vec2): Polygon {
-  const n = state.options.randomizeNumVertices
-    ? Math.floor(3 + Math.random() * (state.options.maxPolyVertices - 3))
-    : state.options.maxPolyVertices
+  const n = appState.state.options.randomizeNumVertices
+    ? Math.floor(
+        3 + Math.random() * (appState.state.options.maxPolyVertices - 3)
+      )
+    : appState.state.options.maxPolyVertices
 
   const poly = new Polygon(
     pos ?? inputs.mPos.copy(),
-    genPolygonVerts(n).map((v) => v.scale(state.options.polySize))
+    genPolygonVerts(n).map((v) => v.scale(appState.state.options.polySize))
   )
   if (vel) poly.velocity = vel
   poly.updateVertices()
