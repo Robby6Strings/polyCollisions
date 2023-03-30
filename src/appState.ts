@@ -1,4 +1,4 @@
-import { setupOptionsUI } from "./optionsUi"
+import { setupOptionsUI } from "./ui/optionsUi"
 import { Polygon, IPolygon } from "./lib/polygon"
 import { getPrefabCreator, getPrefabs, Prefab } from "./lib/prefab"
 import { Emitter, IEmitter } from "./lib/emitter"

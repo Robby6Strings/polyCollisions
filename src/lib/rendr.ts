@@ -1,15 +1,6 @@
-import { generateUUID } from "./math"
-import { IStateObserver } from "./state"
-
 export namespace Rendr {
   const eventHandlerRefs: EventHandlerRef[] = []
-  const elementSubscriptions: WatchedElementRef[] = []
-
-  type ReactivityConfig = {
-    stateObserver: IStateObserver
-    property: string
-    callback: { (el: HTMLElement, newVal: any): void }
-  }
+  let elementSubscriptions: WatchedElementRef[] = []
 
   type EventHandlerRef = {
     element: HTMLElement
@@ -22,7 +13,9 @@ export namespace Rendr {
   }
 
   export type ElementEventProps<T> = {
-    onCreated?: { (el: T): void }
+    onCreated?: {
+      (el: T, creator: { (newProps: ElementProps<T>): T }): void
+    }
     onChange?: { (el: T): void }
     onClick?: { (el: T): void }
     onDestroyed?: { (el: T): void }
@@ -32,7 +25,6 @@ export namespace Rendr {
     className?: string
     htmlFor?: string
     children?: HTMLElement[]
-    watch?: ReactivityConfig
     [key: string]: any
   }
 
@@ -71,10 +63,23 @@ export namespace Rendr {
     }
   }
 
-  export function resetElementSubscriptions() {
+  export function resetSubscriptions() {
     while (elementSubscriptions.length > 0) {
       elementSubscriptions.pop()?.onDestroyed()
     }
+  }
+  export function resetElementSubscriptions(el: HTMLElement) {
+    let children = Array.from(el.children) as Array<HTMLElement>
+    while (children.length) {
+      const child = children.pop()!
+      resetElementSubscriptions(child)
+    }
+
+    const subs = elementSubscriptions.filter((s) => s.element === el)
+    while (subs.length) {
+      subs.pop()?.onDestroyed()
+    }
+    elementSubscriptions = elementSubscriptions.filter((s) => s.element !== el)
   }
 
   export function element<T extends HTMLElement>(
@@ -88,7 +93,6 @@ export namespace Rendr {
       onChange,
       onClick,
       onDestroyed,
-      watch,
       ...rest
     } = props
 
@@ -99,6 +103,11 @@ export namespace Rendr {
     if (children) element.append(...children)
     if (htmlFor && "htmlFor" in element) element.htmlFor = htmlFor
 
+    if (onCreated) {
+      onCreated(element, (newProps: ElementProps<T> = {}) => {
+        return Rendr.element(element.tagName, Object.assign(props, newProps))
+      })
+    }
     if (onDestroyed) {
       elementSubscriptions.push({
         element,
@@ -107,22 +116,6 @@ export namespace Rendr {
         },
       })
     }
-
-    if (watch) {
-      const { stateObserver, property, callback }: ReactivityConfig = watch
-      const originKey = generateUUID()
-      stateObserver.subscribe(originKey, property, (newVal) =>
-        callback(element, newVal)
-      )
-      elementSubscriptions.push({
-        element,
-        onDestroyed: () => {
-          stateObserver.unsubscribe(originKey, property)
-        },
-      })
-    }
-
-    if (onCreated) onCreated(element)
 
     return element
   }
@@ -176,5 +169,5 @@ export namespace Rendr {
 
 // const reactiveEl = Rendr.element("div", {
 //   className: "Asd",
-//   watch: { stateObserver: appState, property: "123", callback: () => {} },
+//   observes: [{ stateObserver: appState, property: "123", callback: () => {} }],
 // })
