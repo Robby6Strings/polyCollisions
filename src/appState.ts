@@ -2,7 +2,7 @@ import { setupOptionsUI } from "./optionsUi"
 import { Polygon, IPolygon } from "./lib/polygon"
 import { getPrefabCreator, getPrefabs, Prefab } from "./lib/prefab"
 import { Emitter, IEmitter } from "./lib/emitter"
-import { ObservableState } from "./lib/state"
+import { StateObserver } from "./lib/state"
 import { Vec2 } from "./lib/vec"
 
 export const defaultOptions = {
@@ -51,7 +51,7 @@ export const optionGroups = {
   Physics: ["gravity"],
 }
 
-export const appState = new ObservableState(defaultState)
+export const appState = new StateObserver(defaultState)
 
 export const saveState = () => {
   const { polygons, emitters, options, prefab } = appState.state

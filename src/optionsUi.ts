@@ -120,7 +120,7 @@ const createButtons = (loopFn: { (): void }) => {
         }))
       },
       watch: {
-        state: appState,
+        stateObserver: appState,
         property: "creatingEmitter",
         callback: (el, newVal) => (el.className = newVal ? "active" : ""),
       },

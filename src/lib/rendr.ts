@@ -1,12 +1,12 @@
 import { generateUUID } from "./math"
-import { IState } from "./state"
+import { IStateObserver } from "./state"
 
 export namespace Rendr {
   const eventHandlerRefs: EventHandlerRef[] = []
   const elementSubscriptions: WatchedElementRef[] = []
 
   type ReactivityConfig = {
-    state: IState
+    stateObserver: IStateObserver
     property: string
     callback: { (el: HTMLElement, newVal: any): void }
   }
@@ -109,15 +109,15 @@ export namespace Rendr {
     }
 
     if (watch) {
-      const { state, property, callback }: ReactivityConfig = watch
+      const { stateObserver, property, callback }: ReactivityConfig = watch
       const originKey = generateUUID()
-      state.subscribe(originKey, property, (newVal) =>
+      stateObserver.subscribe(originKey, property, (newVal) =>
         callback(element, newVal)
       )
       elementSubscriptions.push({
         element,
         onDestroyed: () => {
-          state.unsubscribe(originKey, property)
+          stateObserver.unsubscribe(originKey, property)
         },
       })
     }
@@ -176,5 +176,5 @@ export namespace Rendr {
 
 // const reactiveEl = Rendr.element("div", {
 //   className: "Asd",
-//   watch: { state: appState, property: "123", callback: () => {} },
+//   watch: { stateObserver: appState, property: "123", callback: () => {} },
 // })
