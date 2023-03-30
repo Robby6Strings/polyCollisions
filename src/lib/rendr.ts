@@ -91,7 +91,6 @@ export namespace Rendr {
     props: ElementProps<T> = {}
   ): T {
     const {
-      id = props.id ?? generateUUID(),
       htmlFor,
       children,
       onCreated,
@@ -145,8 +144,8 @@ export namespace Rendr {
   export function select(
     id: string,
     val: string[],
-    eventHandlers: ElementProps<HTMLSelectElement> = {}
-  ): HTMLSelectElement {
+    props: ElementProps<HTMLSelectElement> = {}
+  ) {
     return element<HTMLSelectElement>("select", {
       id,
       children: val.map((item: string) =>
@@ -155,29 +154,29 @@ export namespace Rendr {
           text: item,
         })
       ),
-      ...eventHandlers,
+      ...props,
     })
   }
   export function input(
     id: string,
     val: boolean | number,
-    eventHandlers: ElementProps<HTMLInputElement> = {}
-  ): HTMLInputElement {
+    props: ElementProps<HTMLInputElement> = {}
+  ) {
     return element<HTMLInputElement>("input", {
       id,
       type: getInputType(val),
       [typeof val === "boolean" ? "checked" : "value"]: val,
-      ...eventHandlers,
+      ...props,
     })
   }
   export function button(
     innerText: string,
-    eventHandlers: ElementProps<HTMLButtonElement> = {}
-  ): HTMLButtonElement {
-    return element("button", {
+    props: ElementProps<HTMLButtonElement> = {}
+  ) {
+    return element<HTMLButtonElement>("button", {
       type: "button",
       innerText,
-      ...eventHandlers,
+      ...props,
     })
   }
 }
