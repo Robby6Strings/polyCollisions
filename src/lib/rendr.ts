@@ -91,6 +91,7 @@ export namespace Rendr {
     props: ElementProps<T> = {}
   ): T {
     const {
+      id,
       htmlFor,
       children,
       onCreated,
@@ -105,7 +106,7 @@ export namespace Rendr {
       document.createElement(tag),
       computedProps ? computedProps(rest) : rest
     ) as T
-    element.id = props.id ?? generateUUID()
+    element.id = id ?? generateUUID()
 
     if (onChange) element.onchange = () => onChange(element)
     if (onClick) element.onclick = () => onClick(element)
@@ -113,15 +114,15 @@ export namespace Rendr {
     if (htmlFor && "htmlFor" in element) element.htmlFor = htmlFor
 
     if (onCreated) {
-      onCreated(element, (newProps: ElementProps<T> = {}) => {
-        console.log("onCreated", { newProps })
+      function creator(newProps: ElementProps<T> = {}) {
         return Rendr.element(
           element.tagName,
           Object.keys(newProps).length
             ? Object.assign(props, { ...newProps })
             : props
         )
-      })
+      }
+      onCreated(element, creator)
     }
     if (onDestroyed) {
       elementSubscriptions.push({

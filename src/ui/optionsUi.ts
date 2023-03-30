@@ -60,12 +60,17 @@ const buttons = (loopFn: { (): void }) => {
       computedProps: (props: Rendr.ElementProps<HTMLDivElement>) =>
         Object.assign({ innerText: appState.state.creatingEmitter }, props),
 
-      onCreated: (el, createEl) =>
+      onCreated: (el, creator) =>
         appState.subscribe(el.id, "creatingEmitter", (newVal: boolean) =>
           el.replaceWith(
-            createEl({
+            creator({
               innerText: newVal,
-              children: newVal ? [element("p", { innerText: "child" })] : [],
+              children: newVal
+                ? [
+                    element("p", { innerText: "child" }),
+                    element("p", { innerText: "child" }),
+                  ]
+                : [],
             })
           )
         ),
