@@ -1,7 +1,7 @@
 import "./style.css"
 import { SAT } from "./lib/SAT"
 import { createPolygon, Polygon } from "./lib/polygon"
-import { keyMap } from "./inputs"
+import { keyMap } from "./keyMap"
 import { quadTree } from "./lib/quadTree"
 import { loadState, appState } from "./appState"
 import { normalize } from "./lib/math"
