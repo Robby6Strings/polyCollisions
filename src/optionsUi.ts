@@ -55,19 +55,16 @@ function createOption(
   const onChange = events.onChange
     ? events.onChange
     : (el: HTMLSelectElement | HTMLInputElement) => {
-        appState.update((s) => {
-          return {
-            ...s,
-            options: {
-              ...s.options,
-              [key]: Array.isArray(val)
-                ? (el as HTMLSelectElement).value
-                : typeof val === "boolean"
-                ? (el as HTMLInputElement).checked
-                : parseFloat((el as HTMLInputElement).value),
-            },
-          }
-        })
+        appState.update((state) => ({
+          options: {
+            ...state.options,
+            [key]: Array.isArray(val)
+              ? (el as HTMLSelectElement).value
+              : typeof val === "boolean"
+              ? (el as HTMLInputElement).checked
+              : parseFloat((el as HTMLInputElement).value),
+          },
+        }))
       }
 
   const onCreated = events.onCreated
@@ -104,10 +101,7 @@ const createButtons = (loopFn: { (): void }) => {
   return div("buttons", [
     button("Reload Polygon Prefab [R]", { onClick: () => reloadPrefab() }),
     button("Clear Polygons [C]", {
-      onClick: () =>
-        appState.update((s) => {
-          return { ...s, polygons: [] }
-        }),
+      onClick: () => appState.update(() => ({ polygons: [] })),
     }),
     button("Reset Options [O]", {
       onClick: () => {
@@ -121,9 +115,9 @@ const createButtons = (loopFn: { (): void }) => {
     button("Create Emitter [E]", {
       className: appState.state.creatingEmitter ? "active" : "",
       onClick: () => {
-        appState.update((state) => {
-          return { ...state, creatingEmitter: !state.creatingEmitter }
-        })
+        appState.update((state) => ({
+          creatingEmitter: !state.creatingEmitter,
+        }))
       },
       watch: {
         state: appState,
@@ -139,16 +133,13 @@ const createFpsController = (loopFn: { (): void }) =>
     onChange: (el) => {
       clearInterval(appState.state.loopRef)
       const fps = parseInt(el.value)
-      appState.update((s) => {
-        return {
-          ...s,
-          loopRef: setInterval(loopFn, 1000 / fps),
-          options: {
-            ...s.options,
-            fps,
-          },
-        }
-      })
+      appState.update((state) => ({
+        loopRef: setInterval(loopFn, 1000 / fps),
+        options: {
+          ...state.options,
+          fps,
+        },
+      }))
     },
   })
 
@@ -156,9 +147,7 @@ const createPrefabSelector = () =>
   createOption("prefab", appState.state.options.prefab, {
     onCreated: (el) => (el.value = appState.state.prefab),
     onChange: (el) => {
-      appState.update((s) => {
-        return { ...s, polygons: [] }
-      })
+      appState.update(() => ({ polygons: [] }))
       loadPrefab(strToPrefab(el.value))
     },
   })
@@ -190,12 +179,9 @@ export function setupOptionsUI(loopFn: { (): void }) {
   ])
 
   clearInterval(appState.state.loopRef)
-  appState.update((s) => {
-    return {
-      ...s,
-      loopRef: setInterval(loopFn, 1000 / s.options.fps),
-    }
-  })
+  appState.update((state) => ({
+    loopRef: setInterval(loopFn, 1000 / state.options.fps),
+  }))
 
   document.body.appendChild(optsBox)
 }

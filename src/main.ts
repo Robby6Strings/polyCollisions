@@ -1,7 +1,7 @@
 import "./style.css"
 import { SAT } from "./lib/SAT"
 import { createPolygon, Polygon } from "./lib/polygon"
-import { keyMap, inputs } from "./inputs"
+import { keyMap } from "./inputs"
 import { quadTree } from "./lib/quadTree"
 import { loadState, appState } from "./appState"
 import { normalize } from "./lib/math"
@@ -34,24 +34,23 @@ loadState(main)
 //event listeners
 {
   function toggleMouseInput(btn: number, val: boolean) {
-    inputs[btn == 0 ? "m0" : "m1"] = val
+    appState.update((state) => ({
+      inputs: { ...state.inputs, [btn == 0 ? "m0" : "m1"]: val },
+    }))
   }
 
   canvas.addEventListener("click", () => {
     if (appState.state.creatingEmitter) {
-      appState.update((state) => {
-        return {
-          ...state,
-          emitters: [
-            ...state.emitters,
-            new Emitter(
-              inputs.mPos.copy(),
-              new Vec2(),
-              state.options.spawnCooldown
-            ),
-          ],
-        }
-      })
+      appState.update((state) => ({
+        emitters: [
+          ...state.emitters,
+          new Emitter(
+            state.inputs.mPos.copy(),
+            new Vec2(),
+            state.options.spawnCooldown
+          ),
+        ],
+      }))
     }
   })
 
@@ -74,27 +73,27 @@ loadState(main)
   })
 
   canvas.addEventListener("mousemove", (e) => {
-    inputs.mPos.x = e.clientX
-    inputs.mPos.y = e.clientY
+    appState.update((state) => ({
+      inputs: { ...state.inputs, mPos: new Vec2(e.clientX, e.clientY) },
+    }))
   })
 }
 
 function main() {
+  const { creatingEmitter, inputs } = appState.state
   let newPolygons: Polygon[] = []
-  if (!appState.state.creatingEmitter && inputs.m0) {
-    newPolygons.push(createPolygon())
+  if (!creatingEmitter && inputs.m0) {
+    console.log("mDown")
+    newPolygons.push(createPolygon(inputs.mPos.copy()))
   }
   for (let i = 0; i < appState.state.emitters.length; i++) {
     const poly = appState.state.emitters[i].update(appState.state.options.fps)
     if (poly) newPolygons.push(poly)
   }
   if (newPolygons.length > 0) {
-    appState.update((state) => {
-      return {
-        ...state,
-        polygons: [...state.polygons, ...newPolygons],
-      }
-    })
+    appState.update((state) => ({
+      polygons: [...state.polygons, ...newPolygons],
+    }))
   }
 
   const frameStartTime = performance.now()
@@ -123,9 +122,7 @@ const cullOffscreen = (items: Polygon[]) => {
 function update() {
   updatePhysics()
   handleCollisions()
-  appState.update((state) => {
-    return { ...state, polygons: cullOffscreen(state.polygons) }
-  })
+  appState.update((state) => ({ polygons: cullOffscreen(state.polygons) }))
 }
 
 function updatePhysics() {
@@ -136,6 +133,7 @@ function updatePhysics() {
     if (!poly.isStatic) {
       poly.rotateBy(poly.angularVelocity)
 
+      const { inputs, options } = appState.state
       // r-click blackhole
       if (inputs.m1) {
         const gravAngle = Math.atan2(
@@ -148,7 +146,7 @@ function updatePhysics() {
         poly.velocity.y += Math.sin(gravAngle) * gravForce
       }
 
-      poly.velocity.y += appState.state.options.gravity // gravity
+      poly.velocity.y += options.gravity // gravity
 
       poly.velocity = poly.velocity.multiply(0.935) // friction
       poly.angularVelocity = poly.angularVelocity * 0.4

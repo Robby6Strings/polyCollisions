@@ -1,4 +1,3 @@
-import { inputs } from "../inputs"
 import { IVec2, Vec2 } from "./vec"
 import { QuadTree } from "./quadTree"
 import { appState } from "../appState"
@@ -218,7 +217,7 @@ export function genPolygonVerts(n: number): Vec2[] {
   return verts
 }
 
-export function createPolygon(pos?: Vec2, vel?: Vec2): Polygon {
+export function createPolygon(pos: Vec2, vel?: Vec2): Polygon {
   const n = appState.state.options.randomizeNumVertices
     ? Math.floor(
         3 + Math.random() * (appState.state.options.maxPolyVertices - 3)
@@ -226,7 +225,7 @@ export function createPolygon(pos?: Vec2, vel?: Vec2): Polygon {
     : appState.state.options.maxPolyVertices
 
   const poly = new Polygon(
-    pos ?? inputs.mPos.copy(),
+    pos,
     genPolygonVerts(n).map((v) => v.scale(appState.state.options.polySize))
   )
   if (vel) poly.velocity = vel

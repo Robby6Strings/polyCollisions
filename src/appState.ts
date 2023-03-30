@@ -3,6 +3,7 @@ import { Polygon, IPolygon } from "./lib/polygon"
 import { getPrefabCreator, getPrefabs, Prefab } from "./lib/prefab"
 import { Emitter, IEmitter } from "./lib/emitter"
 import { ObservableState } from "./lib/state"
+import { Vec2 } from "./lib/vec"
 
 export const defaultOptions = {
   renderQuadTree: false,
@@ -18,7 +19,6 @@ export const defaultOptions = {
   prefab: getPrefabs(),
   spawnCooldown: 450,
 }
-//export type optionKey = keyof typeof defaultOptions
 
 const defaultState = {
   loopRef: -1,
@@ -27,6 +27,11 @@ const defaultState = {
   options: { ...defaultOptions },
   prefab: Prefab.Default,
   creatingEmitter: false,
+  inputs: {
+    m0: false,
+    m1: false,
+    mPos: new Vec2(),
+  },
 }
 
 export const optionGroups = {
@@ -65,19 +70,16 @@ export const loadState = (loopFn: { (): void }) => {
   if (data) {
     try {
       let parsed = JSON.parse(data)
-      appState.update((state) => {
-        return {
-          ...state,
-          polygons: (parsed.polygons ?? ([] as IPolygon[])).map((s: IPolygon) =>
-            Polygon.deserialize(s)
-          ),
-          emitters: (parsed.emitters ?? ([] as IEmitter[])).map((e: IEmitter) =>
-            Emitter.deserialize(e)
-          ),
-          prefab: parsed.prefab ?? Prefab.Default,
-          options: parsed.options ?? { ...defaultOptions },
-        }
-      })
+      appState.update(() => ({
+        polygons: (parsed.polygons ?? ([] as IPolygon[])).map((s: IPolygon) =>
+          Polygon.deserialize(s)
+        ),
+        emitters: (parsed.emitters ?? ([] as IEmitter[])).map((e: IEmitter) =>
+          Emitter.deserialize(e)
+        ),
+        prefab: parsed.prefab ?? Prefab.Default,
+        options: parsed.options ?? { ...defaultOptions },
+      }))
     } catch (error) {
       console.log("loadState error - localStorage has been cleared.", {
         error,
@@ -93,18 +95,14 @@ export const loadState = (loopFn: { (): void }) => {
 }
 
 export const resetOptions = () => {
-  appState.update((values) => {
-    return { ...values, options: { ...defaultOptions } }
-  })
+  appState.update(() => ({ options: { ...defaultOptions } }))
 }
 
 export function loadPrefab(prefab: Prefab) {
-  appState.update((values) => Object.assign(values, { prefab }))
+  appState.update(() => ({ prefab }))
   reloadPrefab()
 }
 export const reloadPrefab = () => {
   const { polygons, emitters } = getPrefabCreator(appState.state.prefab)()
-  appState.update((values) => {
-    return { ...values, polygons, emitters: emitters ?? [] }
-  })
+  appState.update(() => ({ polygons, emitters: emitters ?? [] }))
 }

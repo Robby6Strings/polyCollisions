@@ -47,7 +47,7 @@ export class ObservableState<T extends Object> implements IObservableState<T> {
     if (!keyObservers) return
     keyObservers.delete(originKey)
   }
-  update(val: { (values: T): T }) {
+  update(val: { (values: T): Partial<T> }) {
     Object.assign(this.state, val(this.state))
   }
 }
