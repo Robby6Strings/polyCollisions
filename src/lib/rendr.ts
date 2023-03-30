@@ -91,7 +91,7 @@ export namespace Rendr {
     props: ElementProps<T> = {}
   ): T {
     const {
-      id,
+      id = props.id ?? generateUUID(),
       htmlFor,
       children,
       onCreated,
@@ -106,7 +106,6 @@ export namespace Rendr {
       document.createElement(tag),
       computedProps ? computedProps(rest) : rest
     ) as T
-    element.id = id ?? generateUUID()
 
     if (onChange) element.onchange = () => onChange(element)
     if (onClick) element.onclick = () => onClick(element)

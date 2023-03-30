@@ -11,7 +11,6 @@ import {
 import { optionGroup } from "./components/option"
 import { prefabSelector } from "./components/prefabSelector"
 import { fpsController } from "./components/fpsController"
-import { generateUUID } from "../lib/math"
 
 const { div, button, element } = Rendr
 
@@ -35,7 +34,6 @@ const buttons = (loopFn: { (): void }) => {
     button("Load State [L]", { onClick: () => loadState(loopFn) }),
     button("Delete Save [D]", { onClick: () => deleteState() }),
     button("Create Emitter [E]", {
-      id: generateUUID(),
       computedProps: (props: Rendr.ElementProps<HTMLButtonElement>) =>
         Object.assign(
           { className: appState.state.creatingEmitter ? "active" : "" },
@@ -56,7 +54,6 @@ const buttons = (loopFn: { (): void }) => {
     }),
 
     element("div", {
-      id: generateUUID(),
       computedProps: (props: Rendr.ElementProps<HTMLDivElement>) =>
         Object.assign({ innerText: appState.state.creatingEmitter }, props),
 
