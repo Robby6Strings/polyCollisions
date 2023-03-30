@@ -53,8 +53,9 @@ export class Polygon implements IPolygon {
 
   render(ctx: CanvasRenderingContext2D): void {
     const vertices = this.getVertices()
+    const { options } = appState.state
 
-    if (appState.state.options.renderPolyData) {
+    if (options.renderPolyData) {
       ctx.fillStyle = "#777"
       ctx.fillText(
         `(${this.position.x.toFixed(2)}, ${this.position.y.toFixed(2)})`,
@@ -66,7 +67,7 @@ export class Polygon implements IPolygon {
     ctx.fillStyle = "#555"
 
     ctx.strokeStyle = this.isColliding ? "red" : "green"
-    ctx.lineWidth = appState.state.options.strokeWidth
+    ctx.lineWidth = options.strokeWidth
 
     ctx.beginPath()
     ctx.moveTo(vertices[0].x, vertices[0].y)
@@ -75,7 +76,7 @@ export class Polygon implements IPolygon {
     }
     ctx.closePath()
     ctx.stroke()
-    if (appState.state.options.renderPolyBackgrounds) ctx.fill()
+    if (options.renderPolyBackgrounds) ctx.fill()
     ctx.lineWidth = 1
   }
   renderBounds(ctx: CanvasRenderingContext2D): void {
@@ -200,12 +201,6 @@ export class Polygon implements IPolygon {
     poly.velocity = Vec2.deserialize(velocity)
     return poly
   }
-
-  // public static deserialize(str: string): Vec2 {
-  //   const data: IVec2 = JSON.parse(str)
-  //   const { x, y } = data
-  //   return new Vec2(x, y)
-  // }
 }
 
 export function genPolygonVerts(n: number): Vec2[] {
@@ -218,15 +213,16 @@ export function genPolygonVerts(n: number): Vec2[] {
 }
 
 export function createPolygon(pos: Vec2, vel?: Vec2): Polygon {
-  const n = appState.state.options.randomizeNumVertices
-    ? Math.floor(
-        3 + Math.random() * (appState.state.options.maxPolyVertices - 3)
-      )
-    : appState.state.options.maxPolyVertices
+  const { randomizeNumVertices, maxPolyVertices, polySize } =
+    appState.state.options
+
+  const n = randomizeNumVertices
+    ? Math.floor(3 + Math.random() * (maxPolyVertices - 3))
+    : maxPolyVertices
 
   const poly = new Polygon(
     pos,
-    genPolygonVerts(n).map((v) => v.scale(appState.state.options.polySize))
+    genPolygonVerts(n).map((v) => v.scale(polySize))
   )
   if (vel) poly.velocity = vel
   poly.updateVertices()

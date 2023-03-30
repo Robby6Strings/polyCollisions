@@ -55,9 +55,9 @@ function createOption(
   const onChange = events.onChange
     ? events.onChange
     : (el: HTMLSelectElement | HTMLInputElement) => {
-        appState.update((state) => ({
+        appState.update(({ options }) => ({
           options: {
-            ...state.options,
+            ...options,
             [key]: Array.isArray(val)
               ? (el as HTMLSelectElement).value
               : typeof val === "boolean"
@@ -115,8 +115,8 @@ const createButtons = (loopFn: { (): void }) => {
     button("Create Emitter [E]", {
       className: appState.state.creatingEmitter ? "active" : "",
       onClick: () => {
-        appState.update((state) => ({
-          creatingEmitter: !state.creatingEmitter,
+        appState.update(({ creatingEmitter }) => ({
+          creatingEmitter: !creatingEmitter,
         }))
       },
       watch: {
@@ -133,12 +133,9 @@ const createFpsController = (loopFn: { (): void }) =>
     onChange: (el) => {
       clearInterval(appState.state.loopRef)
       const fps = parseInt(el.value)
-      appState.update((state) => ({
+      appState.update(({ options }) => ({
         loopRef: setInterval(loopFn, 1000 / fps),
-        options: {
-          ...state.options,
-          fps,
-        },
+        options: { ...options, fps },
       }))
     },
   })
@@ -179,8 +176,8 @@ export function setupOptionsUI(loopFn: { (): void }) {
   ])
 
   clearInterval(appState.state.loopRef)
-  appState.update((state) => ({
-    loopRef: setInterval(loopFn, 1000 / state.options.fps),
+  appState.update(({ options }) => ({
+    loopRef: setInterval(loopFn, 1000 / options.fps),
   }))
 
   document.body.appendChild(optsBox)

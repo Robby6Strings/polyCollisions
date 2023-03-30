@@ -34,21 +34,17 @@ loadState(main)
 //event listeners
 {
   function toggleMouseInput(btn: number, val: boolean) {
-    appState.update((state) => ({
-      inputs: { ...state.inputs, [btn == 0 ? "m0" : "m1"]: val },
+    appState.update(({ inputs }) => ({
+      inputs: { ...inputs, [btn == 0 ? "m0" : "m1"]: val },
     }))
   }
 
   canvas.addEventListener("click", () => {
     if (appState.state.creatingEmitter) {
-      appState.update((state) => ({
+      appState.update(({ emitters, inputs, options }) => ({
         emitters: [
-          ...state.emitters,
-          new Emitter(
-            state.inputs.mPos.copy(),
-            new Vec2(),
-            state.options.spawnCooldown
-          ),
+          ...emitters,
+          new Emitter(inputs.mPos.copy(), new Vec2(), options.spawnCooldown),
         ],
       }))
     }
@@ -73,38 +69,37 @@ loadState(main)
   })
 
   canvas.addEventListener("mousemove", (e) => {
-    appState.update((state) => ({
-      inputs: { ...state.inputs, mPos: new Vec2(e.clientX, e.clientY) },
+    appState.update(({ inputs }) => ({
+      inputs: { ...inputs, mPos: new Vec2(e.clientX, e.clientY) },
     }))
   })
 }
 
 function main() {
-  const { creatingEmitter, inputs } = appState.state
+  const { creatingEmitter, inputs, options, emitters } = appState.state
+
   let newPolygons: Polygon[] = []
-  if (!creatingEmitter && inputs.m0) {
-    console.log("mDown")
+  if (!creatingEmitter && inputs.m0)
     newPolygons.push(createPolygon(inputs.mPos.copy()))
-  }
-  for (let i = 0; i < appState.state.emitters.length; i++) {
-    const poly = appState.state.emitters[i].update(appState.state.options.fps)
+
+  for (let i = 0; i < emitters.length; i++) {
+    const poly = emitters[i].update(options.fps)
     if (poly) newPolygons.push(poly)
   }
   if (newPolygons.length > 0) {
-    appState.update((state) => ({
-      polygons: [...state.polygons, ...newPolygons],
+    appState.update(({ polygons }) => ({
+      polygons: [...polygons, ...newPolygons],
     }))
   }
 
+  const { polygons } = appState.state
   const frameStartTime = performance.now()
   update()
   quadTree.clear()
-  let len = appState.state.polygons.length
+  let len = polygons.length
   while (len--) {
-    quadTree.insert(appState.state.polygons[len].quadTreeRect)
+    quadTree.insert(polygons[len].quadTreeRect)
   }
-  //const dt = Math.min(performance.now() - frameStartTime, 1000 / state.options.fps)
-  //console.log(dt)
   render(performance.now() - frameStartTime)
 }
 
@@ -122,7 +117,7 @@ const cullOffscreen = (items: Polygon[]) => {
 function update() {
   updatePhysics()
   handleCollisions()
-  appState.update((state) => ({ polygons: cullOffscreen(state.polygons) }))
+  appState.update(({ polygons }) => ({ polygons: cullOffscreen(polygons) }))
 }
 
 function updatePhysics() {
@@ -198,23 +193,25 @@ function render(dt: number) {
   const renderStartTime = performance.now()
   ctx.clearRect(0, 0, canvas.width, canvas.height)
 
-  for (let i = 0; i < appState.state.emitters.length; i++) {
-    appState.state.emitters[i].render(ctx)
+  const { emitters, polygons, options } = appState.state
+
+  for (let i = 0; i < emitters.length; i++) {
+    emitters[i].render(ctx)
   }
 
   for (let i = 0; i < appState.state.polygons.length; i++) {
-    const poly = appState.state.polygons[i]
+    const poly = polygons[i]
     poly.render(ctx)
-    if (appState.state.options.renderPolyBounds && poly.vertices.length !== 4)
+    if (options.renderPolyBounds && poly.vertices.length !== 4)
       poly.renderBounds(ctx)
   }
 
-  if (appState.state.options.renderQuadTree) quadTree.render(ctx)
+  if (options.renderQuadTree) quadTree.render(ctx)
 
   const { innerWidth: w, innerHeight: h } = window
 
   ctx.fillStyle = "orange"
-  ctx.fillText(`${appState.state.polygons.length} polygons`, w - 80, h - 45)
+  ctx.fillText(`${polygons.length} polygons`, w - 80, h - 45)
   ctx.fillText(`update: ${dt}ms`, w - 80, h - 30)
   ctx.fillText(
     `render: ${performance.now() - renderStartTime}ms`,
