@@ -29,6 +29,7 @@ export namespace Rendr {
   }
 
   export type ElementProps<T> = ElementEventProps<T> & {
+    className?: string
     htmlFor?: string
     children?: HTMLElement[]
     watch?: ReactivityConfig
@@ -48,14 +49,14 @@ export namespace Rendr {
   }
 
   export function registerEventHandler<T extends HTMLElement>(
-    querySelector: string,
+    elementOrQuery: HTMLElement | string,
     callback: { (e: Event): void }
   ) {
-    const element = document.querySelector<T>(querySelector)
-    if (!element)
-      throw new Error(
-        "unable to get options element with querySelector: " + querySelector
-      )
+    const element =
+      typeof elementOrQuery === "string"
+        ? document.querySelector<T>(elementOrQuery)!
+        : elementOrQuery
+
     element.addEventListener("change", callback)
     eventHandlerRefs.push({
       element,
@@ -65,8 +66,8 @@ export namespace Rendr {
 
   export function resetEventHandlers() {
     while (eventHandlerRefs.length > 0) {
-      const item = eventHandlerRefs.pop()
-      item?.element.removeEventListener("change", item.callback)
+      const { element, callback } = eventHandlerRefs.pop()!
+      element.removeEventListener("change", callback)
     }
   }
 
@@ -90,22 +91,40 @@ export namespace Rendr {
       watch,
       ...rest
     } = props
-    const el = Object.assign(document.createElement(tag), rest) as T
-    if (onChange) el.onchange = () => onChange(el)
-    if (onClick) el.onclick = () => onClick(el)
-    if (children) el.append(...children)
-    if (htmlFor && "htmlFor" in el) el.htmlFor = htmlFor
+
+    const element = Object.assign(document.createElement(tag), rest) as T
+
+    if (onChange) element.onchange = () => onChange(element)
+    if (onClick) element.onclick = () => onClick(element)
+    if (children) element.append(...children)
+    if (htmlFor && "htmlFor" in element) element.htmlFor = htmlFor
+
     if (onDestroyed) {
       elementSubscriptions.push({
-        element: el,
+        element,
         onDestroyed: () => {
-          onDestroyed(el)
+          onDestroyed(element)
         },
       })
     }
-    if (onCreated) onCreated(el)
-    if (watch) return reactiveElement(el, watch)
-    return el
+
+    if (watch) {
+      const { state, property, callback }: ReactivityConfig = watch
+      const originKey = generateUUID()
+      state.subscribe(originKey, property, (newVal) =>
+        callback(element, newVal)
+      )
+      elementSubscriptions.push({
+        element,
+        onDestroyed: () => {
+          state.unsubscribe(originKey, property)
+        },
+      })
+    }
+
+    if (onCreated) onCreated(element)
+
+    return element
   }
 
   export function div(
@@ -136,10 +155,9 @@ export namespace Rendr {
     val: boolean | number,
     eventHandlers: ElementProps<HTMLInputElement> = {}
   ): HTMLInputElement {
-    const type = getInputType(val)
     return element<HTMLInputElement>("input", {
       id,
-      type,
+      type: getInputType(val),
       [typeof val === "boolean" ? "checked" : "value"]: val,
       ...eventHandlers,
     })
@@ -154,21 +172,9 @@ export namespace Rendr {
       ...eventHandlers,
     })
   }
-  function reactiveElement<T extends HTMLElement>(
-    el: T,
-    config: ReactivityConfig
-  ): T {
-    const originKey = generateUUID()
-    config.state.subscribe(originKey, config.property, (newVal) => {
-      config.callback(el, newVal)
-    })
-
-    elementSubscriptions.push({
-      element: el,
-      onDestroyed: () => {
-        config.state.unsubscribe(originKey, config.property)
-      },
-    })
-    return el
-  }
 }
+
+// const reactiveEl = Rendr.element("div", {
+//   className: "Asd",
+//   watch: { state: appState, property: "123", callback: () => {} },
+// })
